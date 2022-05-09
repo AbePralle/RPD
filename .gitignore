@@ -1,0 +1,64 @@
+Source/LocalFilepaths.rogue
+BuildLocal.rogue
+Assets/Data/L000.k3
+
+# Android ignores are listed in Platforms/Android/.gitignore
+
+# Vim
+*.swp
+*.swo
+*.local
+.rogo
+Assets/Images/x*/Rock.png
+
+# Generated and work images
+Assets/Data/L000.json
+Assets/Images/Work
+Assets/Images/T100
+Assets/Images/*/Fonts
+Assets/Images/T200/Buttons/
+Assets/Images/T200/Tiles/Arena/Work/
+Assets/Images/T200/Tiles/Icons/
+Thumbs.db
+Test
+Update.mk
+Publish.mk
+**/Local.mk
+**/Build/
+
+# Merge/Patch/etc.
+*.orig
+*.rej
+*.diff
+*.patch
+
+# Mac
+.DS_Store
+
+# Xcode
+
+#
+build/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata
+*.xccheckout
+*.moved-aside
+DerivedData
+*.hmap
+*.ipa
+*.xcuserstate
+
+# Rogo Build
+/Build
+Local.settings
+
+# Android
+**/src/main/assets
+
