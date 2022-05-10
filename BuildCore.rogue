@@ -8,41 +8,164 @@ if (File.exists("Libraries/Framework/Playdate/Template"))
 endIf
 
 routine rogo_default
-  bootstrap
+  # Configures this RPD project if necessary. Executed via 'rogo' with no other args.
+  configure
   rogo_help
 endRoutine
 
 routine rogo_sim
-  build( "Simulator" )
+  # Build and run on the Playdate simulator.
+  configure
+  build( &simulator )
   rogo_run
 endRoutine
 
+routine rogo_clean
+  # Delete all intermediate and output files.
+  configure
+  File.delete( "Build" )
+  println "Build/ folder deleted."
+endRoutine
+
+routine rogo_device
+  # Build for Playdate hardware and show the compiled "Device" file.
+  configure
+  build( &!simulator, &show )
+endRoutine
+
 routine rogo_build
-  build( "Simulator" )
+  # Build for the Playdate simulator.
+  configure
+  build( &simulator )
+endRoutine
+
+routine rogo_build_simulator
+  # Build for the Playdate simulator.
+  configure
+  build( &simulator )
+endRoutine
+
+description( "build device", "Build a \"Device\" file targeting Playdate hardware." )
+
+routine rogo_build_device
+  # Build a "Device" file targeting Playdate hardware.
+  configure
+  build( &!simulator )
 endRoutine
 
 routine rogo_run
+  # Run the previous build on the Playdate simulator.
+  configure
   run( "Simulator" )
 endRoutine
 
-routine run( target:String )
-  local app = "/Users/abe/Developer/PlaydateSDK/bin/Playdate Simulator.app"
-  execute "open $ -- Build/$/hello_world.pdx" (File.esc(app),target)
+routine rogo_details
+  # Adjust the project details such as Title and Author.
+  configure
+  local settings = JSON.load(File("Settings.json"))
+  local details  = settings//details
+  local old_title = details//title->String
+  input_setting( details, "title",       "Game Title" )
+
+  if (details//title != old_title)
+    # Adjust default filename based on new title
+    use builder = StringBuilder.pool
+      forEach (ch in details//title->String)
+        if (ch.is_letter) builder.print( ch )
+      endForEach
+      details//filename = builder->String
+    endUse
+  endIf
+  input_setting( details, "filename",    "Base Filename" )
+
+  input_setting( details, "author",      "Author" )
+  input_setting( details, "description", "Description" )
+  input_setting( details, "bundle_id",   "Bundle ID" )
+  println "Settings.json updated."
+  settings.save( "Settings.json" )
 endRoutine
 
-routine build( target:String )
+routine build( &simulator, &show )
+  local target = which{ simulator:"Simulator" || "Device" }
   local folder = "Build/$"(target)
   File.create_folder( folder )
-  File.create_folder( folder/"src" )
-  File.sync_from( "Project", folder, &keep_unused )
-  File.sync_from( "Source", folder/"src", &keep_unused )
+  File.create_folder( folder/"Source" )  # Playdate metadata
+  File.create_folder( folder/"src" )     # Playdate source code
+  File.sync_from( "Source", folder/"src" )  # RPD 'Source' -> Playdate 'src'
 
-  execute "cd $ && cmake . && make"(folder)
+  local settings = JSON.load(File("Settings.json"))
+  local details  = settings//details
+
+  local cmake_lists = String(File("Project/CMakeLists.txt"))
+  cmake_lists .= replacing( "$(FILENAME)", details//filename->String )
+  File.save( folder/"CMakeLists.txt", cmake_lists )
+
+  local makefile = String(File("Project/Makefile"))
+  makefile .= replacing( "$(FILENAME)", details//filename->String )
+  File.save( folder/"Makefile", makefile )
+
+  local pdxinfo = String(File("Project/Source/pdxinfo"))
+  pdxinfo .= replacing( "$(TITLE)",       details//name->String )
+  pdxinfo .= replacing( "$(AUTHOR)",      details//author->String )
+  pdxinfo .= replacing( "$(DESCRIPTION)", details//description->String )
+  pdxinfo .= replacing( "$(BUNDLE_ID)",   details//bundle_id->String )
+  pdxinfo .= replacing( "$(IMAGE_PATH)" , details//image_path->String )
+  File.save( folder/"Source/pdxinfo", pdxinfo )
+
+  if (simulator)
+    execute "cd $ && cmake . && make"(folder)
+  else
+    local local_settings = JSON.load_table("LocalSettings.json")
+    local path = local_settings//playdate_sdk->String/"C_API/buildsupport/arm.cmake"
+    execute "cd $ && cmake -DCMAKE_TOOLCHAIN_FILE=$ . && make"(folder,File.esc(path))
+    local output_path = Process.run("pwd",&env)->String.trimmed/"Build/Device"
+    output_path /= "$-Device"(details//filename->String)
+    if (File.exists(output_path))
+      infobox( "OUTPUT FILE\n"+output_path, &no_sides )
+      if (show)
+        Process.run( "open -R $"(File.esc(output_path)) )
+      endIf
+    endIf
+  endIf
 endRoutine
 
-routine bootstrap
+routine find_playdate_sdk->String
+  local path = System.find_program("pdc")
+  if (path)
+    local result = Process.run( "readlink -f $"(File.esc(path)), &env )
+    if (result.success)
+      return File.folder(File.folder(result))
+    endIf
+  endIf
+  return null
+endRoutine
+
+routine run( target:String )
+  local settings = JSON.load(File("Settings.json"))
+  local app = "/Users/abe/Developer/PlaydateSDK/bin/Playdate Simulator.app"
+  execute "open $ -- Build/$/$.pdx" (File.esc(app),target,settings//details//filename)
+endRoutine
+
+routine configure
   if (not System.find_program("cmake"))
     error "'cmake' must be installed."
+  endIf
+
+  if (not File.exists("Settings.json"))
+    infobox "Enter project details. These can be changed with 'rogo details' or by editing Settings.json."
+    local settings = @{
+      details:
+      {
+        title:       "Hello World"
+        filename:    "HelloWorld"
+        author:      "Developer Name"
+        description: "A Playdate game"
+        bundle_id:   "com.developer.game"
+        image_path:  ""
+      }
+    }
+    settings.save( "Settings.json" )
+    rogo_details
   endIf
 
   if (not File.exists("Libraries/RPD"))
@@ -59,6 +182,35 @@ routine bootstrap
   if (not File.exists("Source/main.c"))
     File.copy( "Libraries/RPD/Libraries/Framework/Playdate/Template/src/main.c", "Source", &verbose )
   endIf
+
+  local local_settings = JSON.load_table("LocalSettings.json")
+  if (local_settings//playdate_sdk)
+    if (not File.exists(local_settings//playdate_sdk->String))
+      update_playdate_sdk_location( local_settings, "Updated Playdate SDK location: " )
+    endIf
+  else
+    update_playdate_sdk_location( local_settings, "Found Playdate SDK: " )
+  endIf
+endRoutine
+
+routine update_playdate_sdk_location( local_settings:Value, located_message:String )
+  local path = find_playdate_sdk
+  if (not path or not File.exists(path))
+    path = Console.input("Unable to locate Playdate SDK. Enter path to SDK: ")
+    path = File.expand_path( path )
+  endIf
+  if (path and File.exists(path))
+    local_settings//playdate_sdk = path
+    local_settings.save( "LocalSettings.json" )
+    println located_message + path
+  else
+    error "Unable to locate Playdate SDK. Install it from https://play.date/dev/"
+  endIf
+endRoutine
+
+routine input_setting( table:Value, setting:String, description:String )
+  local text = Console.input( "$ [$]: "(description,table[setting]) )
+  if (String.exists(text)) table[setting] = text
 endRoutine
 
 routine install_rpd( loc="":String )
@@ -108,24 +260,37 @@ routine error( message:String )
   System.exit 1
 endRoutine
 
-routine infobox( message:String )
+routine infobox( message:String, &no_sides )
   local lines = message.word_wrap(Console.width-2)
   local len = 0
   len = len.or_larger( (forEach in lines).count )
 
-  print   '\u250f'
-  loop (len) print '\u2501'
-  println '\u2513'
+  if (no_sides)
+    loop (len) print '\u2501'
+    println
 
-  forEach (line in lines)
-    print   '\u2503'
-    print   line.left_justified(len)
-    println '\u2503'
-  endForEach
+    forEach (line in lines)
+      println line
+    endForEach
 
-  print   '\u2517'
-  loop (len) print '\u2501'
-  println '\u251b'
+    loop (len) print '\u2501'
+    println
+
+  else
+    print   '\u250f'
+    loop (len) print '\u2501'
+    println '\u2513'
+
+    forEach (line in lines)
+      print   '\u2503'
+      print   line.left_justified(len)
+      println '\u2503'
+    endForEach
+
+    print   '\u2517'
+    loop (len) print '\u2501'
+    println '\u251b'
+  endIf
 endRoutine
 
 routine execute( commands:String, error_message=null:String, &suppress_error )->Logical
@@ -381,25 +546,28 @@ routine rogo_help( command="":String )
   max_len += 2
   local max_w = Console.width
   lines.sort( (a,b)=>(a<b) )
-  forEach (line in lines)
-    print line
-    local cmd = line.after_first( "rogo " ).before_first(' ')
-    local description = get_description( cmd )
-    if (description)
-      loop (max_len - line.count) print ' '
-      contingent
-        sufficient (max_len + description.count <= max_w)
-        if (description.contains(". "))
-          description = description.before_first( ". " ) + "."
+  local line_iterator = lines.iterator
+  forEach (m in <<Global>>.global_methods)
+    if (m.name.begins_with(Build.rogo_prefix))
+      local line = line_iterator.read
+      print line
+      local description = get_description( m.name.after_first(Build.rogo_prefix) )
+      if (description)
+        loop (max_len - line.count) print ' '
+        contingent
           sufficient (max_len + description.count <= max_w)
-        endIf
-        necessary (max_len + 10 <= max_w)
-        description = description.unright( (description.count - (max_w - max_len))+3 ) + "..."
-      satisfied
-        print description
-      endContingent
+          if (description.contains(". "))
+            description = description.before_first( ". " ) + "."
+            sufficient (max_len + description.count <= max_w)
+          endIf
+          necessary (max_len + 10 <= max_w)
+          description = description.unright( (description.count - (max_w - max_len))+3 ) + "..."
+        satisfied
+          print description
+        endContingent
+      endIf
+      println
     endIf
-    println
   endForEach
   println
 endRoutine

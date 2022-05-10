@@ -1,5 +1,5 @@
-name=Hello World C
-author=Dave Hayden
-description=A small demo of the C API
-bundleID=com.panic.hellocapi
-imagePath=
+name=$(TITLE)
+author=$(AUTHOR)
+description=$(DESCRIPTION)
+bundleID=$(BUNDLE_ID)
+imagePath=$(IMAGE_PATH)
