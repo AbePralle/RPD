@@ -4,8 +4,7 @@
 $define DEFAULT_RPD "https://github.com/AbePralle/RPD.git#main"
 
 if (File.exists("Libraries/Framework/Playdate/Template"))
-  errorbox "Rogo must be run from the RPD project folder, not the RPD library folder."
-  System.exit 1
+  error "Rogo must be run from the RPD project folder, not the RPD library folder."
 endIf
 
 routine rogo_default
@@ -13,13 +12,53 @@ routine rogo_default
   rogo_help
 endRoutine
 
+routine rogo_sim
+  build( "Simulator" )
+  rogo_run
+endRoutine
+
+routine rogo_build
+  build( "Simulator" )
+endRoutine
+
+routine rogo_run
+  run( "Simulator" )
+endRoutine
+
+routine run( target:String )
+  local app = "/Users/abe/Developer/PlaydateSDK/bin/Playdate Simulator.app"
+  execute "open $ -- Build/$/hello_world.pdx" (File.esc(app),target)
+endRoutine
+
+routine build( target:String )
+  local folder = "Build/$"(target)
+  File.create_folder( folder )
+  File.create_folder( folder/"src" )
+  File.sync_from( "Project", folder, &keep_unused )
+  File.sync_from( "Source", folder/"src", &keep_unused )
+
+  execute "cd $ && cmake . && make"(folder)
+endRoutine
+
 routine bootstrap
+  if (not System.find_program("cmake"))
+    error "'cmake' must be installed."
+  endIf
+
   if (not File.exists("Libraries/RPD"))
     File.create_folder( "Libraries" )
     install_rpd
   endIf
 
-  #if (not File.exists("Source"))
+  File.create_folder( "Project" )
+  local files = Files( "Libraries/RPD/Libraries/Framework/Playdate/Template/**" )
+  files.remove( "**/src/**" )
+  File.sync_from( files, "Project", &missing_only, &keep_unused, &verbose )
+
+  File.create_folder( "Source" )
+  if (not File.exists("Source/main.c"))
+    File.copy( "Libraries/RPD/Libraries/Framework/Playdate/Template/src/main.c", "Source", &verbose )
+  endIf
 endRoutine
 
 routine install_rpd( loc="":String )
@@ -47,7 +86,7 @@ routine install_rpd( loc="":String )
   execute "git clone $ --branch $ $" (url,branch,"Libraries/RPD")
 endRoutine
 
-routine errorbox( message:String )
+routine error( message:String )
   local lines = ("ERROR\n\n" + message).word_wrap(Console.width-2)
   local len = 0
   len = len.or_larger( (forEach in lines).count )
@@ -65,6 +104,8 @@ routine errorbox( message:String )
   print   '\u255a'
   loop (len) print '\u2550'
   println '\u255d'
+
+  System.exit 1
 endRoutine
 
 routine infobox( message:String )
