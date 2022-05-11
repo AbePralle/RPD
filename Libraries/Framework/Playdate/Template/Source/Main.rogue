@@ -1,0 +1,4 @@
+routine hello->String
+  return "Hello Rogue!"
+endRoutine
+

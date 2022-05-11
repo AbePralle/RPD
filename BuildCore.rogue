@@ -90,10 +90,22 @@ routine build( &simulator, &show )
   local folder = "Build/$"(target)
   File.create_folder( folder )
   File.create_folder( folder/"Source" )
-  File.sync_from( "Source", folder/"Source" )
+  File.sync_from( Files("Source/**.c"), folder/"Source" )
 
-  local files = File.listing( folder/"Source/**.c" )
-  forEach (file in rewriter=files.rewriter)
+  if (File.exists("Source/Main.rogue"))
+    local r2_filepath = System.find_program("r2")
+    if (not String.exists(r2_filepath))
+      error "The R2 (Rogue v2) compiler is not installed."
+    endIf
+    local r2_folder = Process.run( "readlink -f $"(File.esc(r2_filepath)), &env )->String.trimmed
+    assert String.exists(r2_folder)
+    r2_folder = File.folder( File.folder(r2_folder) )
+    execute "r2 Source/Main.rogue --output=$/Source/RogueProgram --libraries=$/Source/Libraries"(folder,File.esc(r2_folder))
+  endIf
+
+  local listing = File.listing( folder/"Source/**.c" )
+trace listing
+  forEach (file in rewriter=listing.rewriter)
     rewriter.write( file.after_first(folder+'/') )
   endForEach
 
@@ -102,12 +114,12 @@ routine build( &simulator, &show )
 
   local cmake_lists = String(File("Project/CMakeLists.txt"))
   cmake_lists .= replacing( "$(FILENAME)", details//filename->String )
-  cmake_lists .= replacing( "$(C_FILES)", files.join(' ') )
+  cmake_lists .= replacing( "$(C_FILES)", listing.join(' ') )
   File.save( folder/"CMakeLists.txt", cmake_lists )
 
   local makefile = String(File("Project/Makefile"))
   makefile .= replacing( "$(FILENAME)", details//filename->String )
-  makefile .= replacing( "$(C_FILES)", files.join(" \\\n\t") )
+  makefile .= replacing( "$(C_FILES)", listing.join(" \\\n\t") )
   File.save( folder/"Makefile", makefile )
 
   local pdxinfo = String(File("Project/Source/pdxinfo"))
@@ -182,11 +194,15 @@ routine configure
   File.create_folder( "Project" )
   local files = Files( "Libraries/RPD/Libraries/Framework/Playdate/Template/**" )
   files.remove( "**/Main.c" )
+  files.remove( "**/Main.rogue" )
   File.sync_from( files, "Project", &missing_only, &keep_unused, &verbose )
 
   File.create_folder( "Source" )
   if (not File.exists("Source/Main.c"))
     File.copy( "Libraries/RPD/Libraries/Framework/Playdate/Template/Source/Main.c", "Source", &verbose )
+  endIf
+  if (not File.exists("Source/Main.rogue"))
+    File.copy( "Libraries/RPD/Libraries/Framework/Playdate/Template/Source/Main.rogue", "Source", &verbose )
   endIf
 
   local local_settings = JSON.load_table("LocalSettings.json")

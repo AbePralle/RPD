@@ -1,5 +1,5 @@
 //
-//  main.c
+//  Main.c
 //  Extension
 //
 //  Created by Dave Hayden on 7/30/14.
@@ -10,6 +10,7 @@
 #include <stdlib.h>
 
 #include "pd_api.h"
+#include "RogueProgram.h"
 
 static int update(void* userdata);
 const char* fontpath = "/System/Fonts/Asheville-Sans-14-Bold.pft";
@@ -25,15 +26,17 @@ int eventHandler(PlaydateAPI* pd, PDSystemEvent event, uint32_t arg)
 	if ( event == kEventInit )
 	{
 		const char* err;
+    Rogue_launch();
+
 		font = pd->graphics->loadFont(fontpath, &err);
-		
+
 		if ( font == NULL )
 			pd->system->error("%s:%i Couldn't load font %s: %s", __FILE__, __LINE__, fontpath, err);
 
 		// Note: If you set an update callback in the kEventInit handler, the system assumes the game is pure C and doesn't run any Lua code in the game
 		pd->system->setUpdateCallback(update, pd);
 	}
-	
+
 	return 0;
 }
 
@@ -49,20 +52,21 @@ int dy = 2;
 static int update(void* userdata)
 {
 	PlaydateAPI* pd = userdata;
-	
+
 	pd->graphics->clear(kColorWhite);
 	pd->graphics->setFont(font);
-	pd->graphics->drawText("Hello World!", strlen("Hello World!"), kASCIIEncoding, x, y);
+  RogueString* message = Rogue__hello();
+	pd->graphics->drawText(message->data->as_utf8, message->data->count, kASCIIEncoding, x, y);
 
 	x += dx;
 	y += dy;
-	
+
 	if ( x < 0 || x > LCD_COLUMNS - TEXT_WIDTH )
 		dx = -dx;
-	
+
 	if ( y < 0 || y > LCD_ROWS - TEXT_HEIGHT )
 		dy = -dy;
-        
+
 	pd->system->drawFPS(0,0);
 
 	return 1;
