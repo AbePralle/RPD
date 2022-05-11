@@ -89,19 +89,25 @@ routine build( &simulator, &show )
   local target = which{ simulator:"Simulator" || "Device" }
   local folder = "Build/$"(target)
   File.create_folder( folder )
-  File.create_folder( folder/"Source" )  # Playdate metadata
-  File.create_folder( folder/"src" )     # Playdate source code
-  File.sync_from( "Source", folder/"src" )  # RPD 'Source' -> Playdate 'src'
+  File.create_folder( folder/"Source" )
+  File.sync_from( "Source", folder/"Source" )
+
+  local files = File.listing( folder/"Source/**.c" )
+  forEach (file in rewriter=files.rewriter)
+    rewriter.write( file.after_first(folder+'/') )
+  endForEach
 
   local settings = JSON.load(File("Settings.json"))
   local details  = settings//details
 
   local cmake_lists = String(File("Project/CMakeLists.txt"))
   cmake_lists .= replacing( "$(FILENAME)", details//filename->String )
+  cmake_lists .= replacing( "$(C_FILES)", files.join(' ') )
   File.save( folder/"CMakeLists.txt", cmake_lists )
 
   local makefile = String(File("Project/Makefile"))
   makefile .= replacing( "$(FILENAME)", details//filename->String )
+  makefile .= replacing( "$(C_FILES)", files.join(" \\\n\t") )
   File.save( folder/"Makefile", makefile )
 
   local pdxinfo = String(File("Project/Source/pdxinfo"))
@@ -175,12 +181,12 @@ routine configure
 
   File.create_folder( "Project" )
   local files = Files( "Libraries/RPD/Libraries/Framework/Playdate/Template/**" )
-  files.remove( "**/src/**" )
+  files.remove( "**/Main.c" )
   File.sync_from( files, "Project", &missing_only, &keep_unused, &verbose )
 
   File.create_folder( "Source" )
-  if (not File.exists("Source/main.c"))
-    File.copy( "Libraries/RPD/Libraries/Framework/Playdate/Template/src/main.c", "Source", &verbose )
+  if (not File.exists("Source/Main.c"))
+    File.copy( "Libraries/RPD/Libraries/Framework/Playdate/Template/Source/Main.c", "Source", &verbose )
   endIf
 
   local local_settings = JSON.load_table("LocalSettings.json")
