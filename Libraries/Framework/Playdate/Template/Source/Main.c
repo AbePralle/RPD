@@ -55,7 +55,7 @@ static int update(void* userdata)
 
 	pd->graphics->clear(kColorWhite);
 	pd->graphics->setFont(font);
-  RogueString* message = Rogue__hello();
+  RogueString* message = RogueRoutine__hello();
 	pd->graphics->drawText(message->data->as_utf8, message->data->count, kASCIIEncoding, x, y);
 
 	x += dx;

@@ -1,4 +1,4 @@
-routine hello->String
-  return "Hello Rogue!"
+routine hello->String [essential]
+  return "Hello R2!"
 endRoutine
 
