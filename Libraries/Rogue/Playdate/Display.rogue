@@ -1,0 +1,13 @@
+module Playdate
+
+class Display
+  GLOBAL METHODS
+    method height->Int32
+      return native("LCD_ROWS")->Int32
+
+    method size->XY
+      return XY(width,height)
+
+    method width->Int32
+      return native("LCD_COLUMNS")->Int32
+endClass

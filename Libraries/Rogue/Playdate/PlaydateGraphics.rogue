@@ -1,0 +1,11 @@
+module Playdate
+
+class PlaydateGraphics
+  GLOBAL METHODS
+    method clear( color:LCDSolidColor )
+      native @|Rogue_playdate->graphics->clear( $color.value );
+
+    method clear( pattern:LCDPattern )
+      native @|LCDPattern* pattern = (LCDPattern*) &$pattern;
+              |Rogue_playdate->graphics->clear( pattern );
+endClass

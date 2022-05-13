@@ -1,0 +1,20 @@
+module Playdate
+
+class LCDPattern [compound]
+  PROPERTIES
+    native @|LCDPattern pattern;
+
+  GLOBAL METHODS
+    method create( text_image:String )->LCDPattern
+      # Spaces are white, non-spaces are black
+      native @|LCDPattern pattern = {0};
+
+      if (text_image.count == 64)
+        forEach (ch at i in text_image)
+          native @|pattern[$i>>3] <<= 1;
+                  |if ($ch == ' ') pattern[$i>>3] |= 1;
+        endForEach
+      endIf
+
+      return native("*(($<<LCDPattern>>*)&pattern)")->LCDPattern
+endClass

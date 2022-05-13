@@ -1,0 +1,8 @@
+module Playdate
+
+enum LCDSolidColor
+  BLACK
+  WHITE
+  CLEAR
+  XOR
+endEnum

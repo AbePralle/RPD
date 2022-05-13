@@ -1,10 +1,4 @@
-//
-//  Main.c
-//  Extension
-//
-//  Created by Dave Hayden on 7/30/14.
-//  Copyright (c) 2014 Panic, Inc. All rights reserved.
-//
+// Launcher.c
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -53,7 +47,8 @@ static int update(void* userdata)
 {
 	PlaydateAPI* pd = userdata;
 
-	pd->graphics->clear(kColorWhite);
+  PlaydateRoutine__render__RogueInt64( (RogueInt64)pd );
+
 	pd->graphics->setFont(font);
   RogueString* message = RogueRoutine__hello();
 	pd->graphics->drawText(message->data->as_utf8, message->data->count, kASCIIEncoding, x, y);
@@ -68,6 +63,8 @@ static int update(void* userdata)
 		dy = -dy;
 
 	pd->system->drawFPS(0,0);
+
+  Rogue_collect_garbage();  // executes GC if new allocation threshold has been reached
 
 	return 1;
 }

@@ -100,11 +100,14 @@ routine build( &simulator, &show )
     local r2_folder = Process.run( "readlink -f $"(File.esc(r2_filepath)), &env )->String.trimmed
     assert String.exists(r2_folder)
     r2_folder = File.folder( File.folder(r2_folder) )
-    execute "r2 Source/Main.rogue --output=$/Source/RogueProgram --libraries=$/Source/Libraries"(folder,File.esc(r2_folder))
+    local cmd =  "r2 Source/Main.rogue"
+    cmd      +=  " --output=$/Source/RogueProgram"(folder)
+    cmd      += '' --libraries="$/Source/Libraries;Libraries/RPD/Libraries/Rogue"''(File.esc(r2_folder))
+    cmd      +=  " --gc=manual"
+    execute cmd
   endIf
 
   local listing = File.listing( folder/"Source/**.c" )
-trace listing
   forEach (file in rewriter=listing.rewriter)
     rewriter.write( file.after_first(folder+'/') )
   endForEach
@@ -193,13 +196,13 @@ routine configure
 
   File.create_folder( "Project" )
   local files = Files( "Libraries/RPD/Libraries/Framework/Playdate/Template/**" )
-  files.remove( "**/Main.c" )
+  files.remove( "**/Launcher.c" )
   files.remove( "**/Main.rogue" )
   File.sync_from( files, "Project", &missing_only, &keep_unused, &verbose )
 
   File.create_folder( "Source" )
-  if (not File.exists("Source/Main.c"))
-    File.copy( "Libraries/RPD/Libraries/Framework/Playdate/Template/Source/Main.c", "Source", &verbose )
+  if (not File.exists("Source/Launcher.c"))
+    File.copy( "Libraries/RPD/Libraries/Framework/Playdate/Template/Source/Launcher.c", "Source", &verbose )
   endIf
   if (not File.exists("Source/Main.rogue"))
     File.copy( "Libraries/RPD/Libraries/Framework/Playdate/Template/Source/Main.rogue", "Source", &verbose )

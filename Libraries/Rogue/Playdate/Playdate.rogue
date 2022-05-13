@@ -1,0 +1,42 @@
+# Playdate.rogue
+module Playdate
+uses IntegerGeometry [export]
+
+#$include "Playdate/Canvas.rogue"
+$include "Playdate/Display.rogue"
+$include "Playdate/PlaydateGraphics.rogue"
+$include "Playdate/LCDColor.rogue"
+$include "Playdate/LCDPattern.rogue"
+
+nativeHeader @|#include "pd_api.h"
+nativeHeader @|extern PlaydateAPI* Rogue_playdate;
+nativeCode   @|PlaydateAPI* Rogue_playdate = 0;
+
+routine render( pd:Int64 ) [essential]
+  Playdate.render( pd )
+endRoutine
+
+class Playdate
+  GLOBAL PROPERTIES
+    graphics = PlaydateGraphics()
+
+  GLOBAL METHODS
+    method message->String
+      return native("kColorXOR")->Int32
+
+    method render( pd:Int64 )
+      native @|Rogue_playdate = (PlaydateAPI*)$pd;
+      #graphics.clear( LCDSolidColor.WHITE )
+      graphics.clear(
+        LCDPattern(
+          "########" ...
+          "##     #" ...
+          "# #   # " ...
+          "#  # #  " ...
+          "#   #   " ...
+          "#  # #  " ...
+          "# #   # " ...
+          "##     #"
+        )
+      )
+endClass

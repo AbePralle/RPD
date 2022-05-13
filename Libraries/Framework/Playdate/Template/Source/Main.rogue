@@ -1,4 +1,6 @@
+uses Playdate
+
 routine hello->String [essential]
-  return "Hello R2!"
+  return Playdate.message
 endRoutine
 
