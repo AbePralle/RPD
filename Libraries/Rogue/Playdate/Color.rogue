@@ -1,6 +1,6 @@
 module Playdate
 
-enum LCDSolidColor
+enum Color
   BLACK
   WHITE
   CLEAR

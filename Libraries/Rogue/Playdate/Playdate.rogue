@@ -3,40 +3,42 @@ module Playdate
 uses IntegerGeometry [export]
 
 #$include "Playdate/Canvas.rogue"
+$include "Playdate/Bitmap.rogue"
+$include "Playdate/Color.rogue"
 $include "Playdate/Display.rogue"
+$include "Playdate/Font.rogue"
+$include "Playdate/Log.rogue"
+$include "Playdate/PDLanguage.rogue"
+$include "Playdate/Pattern.rogue"
 $include "Playdate/PlaydateGraphics.rogue"
-$include "Playdate/LCDColor.rogue"
-$include "Playdate/LCDPattern.rogue"
-
-nativeHeader @|#include "pd_api.h"
-nativeHeader @|extern PlaydateAPI* Rogue_playdate;
-nativeCode   @|PlaydateAPI* Rogue_playdate = 0;
-
-routine render( pd:Int64 ) [essential]
-  Playdate.render( pd )
-endRoutine
+$include "Playdate/Screen.rogue"
+$include "Playdate/ScreenState.rogue"
+$include "Playdate/View.rogue"
 
 class Playdate
   GLOBAL PROPERTIES
     graphics = PlaydateGraphics()
+    message = "hmm"
 
   GLOBAL METHODS
-    method message->String
-      return native("kColorXOR")->Int32
+    method draw_fps( x:Int32, y:Int32 )
+      native @|Rogue_playdate->system->drawFPS($x,$y);
 
-    method render( pd:Int64 )
-      native @|Rogue_playdate = (PlaydateAPI*)$pd;
-      #graphics.clear( LCDSolidColor.WHITE )
-      graphics.clear(
-        LCDPattern(
-          "########" ...
-          "##     #" ...
-          "# #   # " ...
-          "#  # #  " ...
-          "#   #   " ...
-          "#  # #  " ...
-          "# #   # " ...
-          "##     #"
-        )
-      )
+    #method message->String
+    #return "[$,$,$]" (PDLanguage.ENGLISH,PDLanguage.JAPANESE,PDLanguage.UNKNOWN)
+
+    method render
+      Screen.draw
+      #Graphics.font.draw( "Testing", Display.width/2, Display.height/2 )
 endClass
+
+nativeHeader @|#include "pd_api.h"
+              |extern PlaydateAPI* Rogue_playdate;
+
+nativeCode   @|PlaydateAPI* Rogue_playdate = 0;
+
+routine render( pd:Int64 ) [essential]
+  native @|Rogue_playdate = (PlaydateAPI*)$pd;
+  Playdate.render
+endRoutine
+

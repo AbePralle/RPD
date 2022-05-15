@@ -1,6 +1,29 @@
 uses Playdate
 
-routine hello->String [essential]
-  return Playdate.message
-endRoutine
+Screen.add( GameView() )
+
+class GameView : View
+  PROPERTIES
+    bg_pattern = Pattern(
+      "# # # # "...
+      " # # # #"...
+      "# # # # "...
+      " # # # #"...
+      "# # # # "...
+      " # # # #"...
+      "# # # # "...
+      " # # # #"
+    )
+
+  METHODS
+    method on_draw
+      # Display.clear( Color.BLACK )
+      Display.clear( bg_pattern )
+      Graphics.font.draw( "Rogue", Display.center )
+endClass
+
+class Graphics [singleton]
+  PROPERTIES
+    font = Font( "/System/Fonts/Asheville-Sans-14-Bold.pft" )
+endClass
 

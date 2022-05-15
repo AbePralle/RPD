@@ -1,0 +1,35 @@
+module Playdate
+
+class Bitmap
+  PROPERTIES
+    filepath      : String
+    width         : Int32
+    height        : Int32
+    bytes_per_row : Int32
+    has_mask      : Logical
+    native "LCDBitmap* bitmap;"
+    native "RogueByte* data;"
+
+  METHODS
+    method init( filepath )
+      native @|const char* error = 0;
+              |const char* filepath = $filepath->data->as_utf8;
+              |$this->bitmap = Rogue_playdate->graphics->loadBitmap( filepath, &error );
+              |if (error)
+              |{
+              |  Rogue_playdate->system->logToConsole( "Error loading image '%s': %s", filepath, error );
+              |}
+              |else
+              |{
+              |  int w, h, bytes_per_row, has_mask;
+              |  Rogue_playdate->graphics->getBitmapData( $this->bitmap, &w, &h, &bytes_per_row, &has_mask,
+              |    (uint8_t**)&$this->data );
+              |}
+
+    method on_cleanup
+      native @|if ($this->bitmap)
+              |{
+              |  Rogue_playdate->graphics->freeBitmap( $this->bitmap );
+              |  $this->bitmap = 0;
+              |}
+endClass

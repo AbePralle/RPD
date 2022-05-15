@@ -1,13 +1,22 @@
 module Playdate
 
 class Display
+  DEFINITIONS
+    width  = native("LCD_COLUMNS")->Int32
+    height = native("LCD_ROWS")->Int32
+
   GLOBAL METHODS
-    method height->Int32
-      return native("LCD_ROWS")->Int32
+    method center->XY
+      return XY( width/2, height/2 )
+
+    method clear( color:Color )
+      native @|Rogue_playdate->graphics->clear( $color.value );
+
+    method clear( pattern:Pattern )
+      native @|LCDPattern* pattern = (LCDPattern*) &$pattern;
+              |Rogue_playdate->graphics->clear( pattern );
 
     method size->XY
       return XY(width,height)
 
-    method width->Int32
-      return native("LCD_COLUMNS")->Int32
 endClass

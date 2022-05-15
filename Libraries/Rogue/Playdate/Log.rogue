@@ -1,0 +1,15 @@
+module Playdate
+
+augment Rogue::Global
+  METHODS
+    method configure_standard_output
+      standard_output = Log
+endAugment
+
+class Log : BufferedPrintWriter [singleton]
+  METHODS
+    method flush( buffer:String )
+      native @|Rogue_playdate->system->logToConsole( "%s", $buffer->data->as_utf8 );
+      buffer.clear
+endClass
+

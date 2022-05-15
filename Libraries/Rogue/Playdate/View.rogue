@@ -1,0 +1,14 @@
+module Playdate
+
+class View
+  PROPERTIES
+    is_hidden : Logical
+
+  METHODS
+    method draw
+      if (is_hidden) return
+      on_draw
+
+    method on_draw
+      noAction
+endClass

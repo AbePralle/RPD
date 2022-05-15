@@ -1,0 +1,38 @@
+module Playdate
+
+class Screen
+  GLOBAL PROPERTIES
+    layers               = View[]
+    state                = ScreenState()
+    next_state_requested : Logical
+
+  GLOBAL METHODS
+    method add( view:View )
+      layers.add( view )
+
+    method change_state( next_state:ScreenState )
+      state.change_state( next_state )
+
+    method draw
+      update_state
+      state.on_draw
+      (forEach in layers).draw
+      state.after_draw
+
+    method next_state
+      next_state_requested = true
+
+    method queue_state( next_state:ScreenState )
+      state.queue_state( next_state )
+
+    #method remove( view:View )
+      #layers.remove( view )
+
+    method update_state
+      while (next_state_requested)
+        next_state_requested = false
+        #if (state._next_state) state .= _next_state
+        if (state._next_state) state = state._next_state
+      endWhile
+endClass
+

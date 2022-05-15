@@ -1,0 +1,6 @@
+class PDLanguage
+  DEFINITIONS
+    ENGLISH  = native("kPDLanguageEnglish")->Int32
+    JAPANESE = native("kPDLanguageJapanese")->Int32
+    UNKNOWN  = native("kPDLanguageUnknown")->Int32
+endClass

@@ -2,10 +2,36 @@ module Playdate
 
 class PlaydateGraphics
   GLOBAL METHODS
-    method clear( color:LCDSolidColor )
-      native @|Rogue_playdate->graphics->clear( $color.value );
+    method display_frame( buffer=null:Byte[] )->Byte[]
+      # Currently displayed frame
+      if (buffer) buffer.on_cleanup
+      else        buffer = Byte[]
 
-    method clear( pattern:LCDPattern )
+      native @|$buffer->as_bytes = Rogue_playdate->graphics->getDisplayFrame();
+      buffer.is_borrowed = true
+      buffer.count    = 52 * 240
+      buffer.capacity = 52 * 240
+      return buffer
+
+    method frame( buffer=null:Byte[] )->Byte[]
+      # Frame currently being drawn and not yet displayed.
+      if (buffer) buffer.on_cleanup
+      else        buffer = Byte[]
+
+      native @|$buffer->as_bytes = Rogue_playdate->graphics->getFrame();
+      buffer.is_borrowed = true
+      buffer.count    = 52 * 240
+      buffer.capacity = 52 * 240
+      return buffer
+
+    method load_font( path:String )->Font
+      return Font( path )
+
+    method set_background_color( color:Color )
+      native @|Rogue_playdate->graphics->setBackgroundColor( $color.value );
+
+    method set_background_color( pattern:Pattern )
       native @|LCDPattern* pattern = (LCDPattern*) &$pattern;
-              |Rogue_playdate->graphics->clear( pattern );
+              |Rogue_playdate->graphics->setBackgroundColor( pattern );
+
 endClass

@@ -6,9 +6,7 @@
 #include "pd_api.h"
 #include "RogueProgram.h"
 
-static int update(void* userdata);
-const char* fontpath = "/System/Fonts/Asheville-Sans-14-Bold.pft";
-LCDFont* font = NULL;
+static int update( void* playdate_api );
 
 #ifdef _WINDLL
 __declspec(dllexport)
@@ -19,15 +17,11 @@ int eventHandler(PlaydateAPI* pd, PDSystemEvent event, uint32_t arg)
 
 	if ( event == kEventInit )
 	{
-		const char* err;
+    Rogue_playdate = pd;
     Rogue_launch();
 
-		font = pd->graphics->loadFont(fontpath, &err);
-
-		if ( font == NULL )
-			pd->system->error("%s:%i Couldn't load font %s: %s", __FILE__, __LINE__, fontpath, err);
-
-		// Note: If you set an update callback in the kEventInit handler, the system assumes the game is pure C and doesn't run any Lua code in the game
+		// Note: If you set an update callback in the kEventInit handler, the system assumes the
+    // game is pure C and doesn't run any Lua code in the game
 		pd->system->setUpdateCallback(update, pd);
 	}
 
@@ -43,11 +37,12 @@ int y = (240-TEXT_HEIGHT)/2;
 int dx = 1;
 int dy = 2;
 
-static int update(void* userdata)
+static int update( void* playdate_api )
 {
-	PlaydateAPI* pd = userdata;
+  PlaydateRoutine__render__RogueInt64( (RogueInt64)playdate_api );
 
-  PlaydateRoutine__render__RogueInt64( (RogueInt64)pd );
+/*
+	PlaydateAPI* pd = userdata;
 
 	pd->graphics->setFont(font);
   RogueString* message = RogueRoutine__hello();
@@ -61,8 +56,7 @@ static int update(void* userdata)
 
 	if ( y < 0 || y > LCD_ROWS - TEXT_HEIGHT )
 		dy = -dy;
-
-	pd->system->drawFPS(0,0);
+*/
 
   Rogue_collect_garbage();  // executes GC if new allocation threshold has been reached
 

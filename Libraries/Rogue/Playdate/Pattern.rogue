@@ -1,11 +1,11 @@
 module Playdate
 
-class LCDPattern [compound]
+class Pattern [compound]
   PROPERTIES
     native @|LCDPattern pattern;
 
   GLOBAL METHODS
-    method create( text_image:String )->LCDPattern
+    method create( text_image:String )->Pattern
       # Spaces are white, non-spaces are black
       native @|LCDPattern pattern = {0};
 
@@ -16,5 +16,5 @@ class LCDPattern [compound]
         endForEach
       endIf
 
-      return native("*(($<<LCDPattern>>*)&pattern)")->LCDPattern
+      return native("*(($<<Pattern>>*)&pattern)")->Pattern
 endClass

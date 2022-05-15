@@ -1,0 +1,41 @@
+module Playdate
+
+class Font
+  PROPERTIES
+    filepath : String
+    leading  = 0  # Spacing between lines
+    tracking = 0  # Spacing between characters
+    native "LCDFont* font;"
+
+  METHODS
+    method init( filepath )
+      native @|const char* error = 0;
+              |const char* filepath = $filepath->data->as_utf8;
+              |$this->font = Rogue_playdate->graphics->loadFont( filepath, &error );
+              |if (error)
+              |{
+              |  Rogue_playdate->system->logToConsole( "Error loading font '%s': %s", filepath, error );
+              |}
+
+    method draw( text:String, x:Int32, y:Int32 )
+      native @|if ($this->font)
+              |{
+              |  Rogue_playdate->graphics->setFont( $this->font );
+              |  Rogue_playdate->graphics->setTextLeading( $leading );
+              |  Rogue_playdate->graphics->setTextTracking( $tracking );
+              |  Rogue_playdate->graphics->drawText( $text->data->as_utf8, $text->data->count, kUTF8Encoding, $x, $y );
+              |}
+
+    method draw( text:String, xy:XY )
+      draw( text, xy.x, xy.y )
+
+    method measure( text:String )->XY
+      local w, h : Int32
+      native @|if ($this->font)
+              |{
+              |  $w = Rogue_playdate->graphics->getTextWidth( $this->font, $text->data->as_utf8,
+              |       $text->data->count, kUTF8Encoding, $tracking );
+              |  $h = Rogue_playdate->graphics->getFontHeight( $this->font );
+              |}
+endClass
+
