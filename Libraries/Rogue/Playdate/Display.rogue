@@ -8,6 +8,7 @@ class Display
   GLOBAL PROPERTIES
     views                = View[]
     state                = DisplayState()
+    clip                 : Box?
     next_state_requested : Logical
 
   GLOBAL METHODS
@@ -16,6 +17,9 @@ class Display
 
     method advance_state
       next_state_requested = true
+
+    method at( u:Real, v:Real )->XY
+      return XY( (width*u).floor, (height*v).floor )
 
     method center->XY
       return XY( width/2, height/2 )
@@ -38,6 +42,15 @@ class Display
 
     method queue_state( next_state:DisplayState )
       state.queue_state( next_state )
+
+    method set_clip( new_clip:Box? )
+      @clip = new_clip
+      if (new_clip.exists)
+        native @|Rogue_playdate->graphics->setScreenClipRect( $new_clip.value.position.x,
+                |  $new_clip.value.position.y, $new_clip.value.size.x, $new_clip.value.size.y );
+      else
+        native @|Rogue_playdate->graphics->clearClipRect();
+      endIf
 
     method set_state( new_state:DisplayState )
       change_state( new_state )

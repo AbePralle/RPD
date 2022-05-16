@@ -1,0 +1,8 @@
+module IntegerGeometry
+uses Playdate
+
+augment Line
+  METHODS
+    method draw( color:Color, width=1:Int32 )
+      native @|Rogue_playdate->graphics->drawLine( $a.x, $a.y, $b.x, $b.y, $width, $color.value );
+endAugment

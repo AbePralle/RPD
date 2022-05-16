@@ -16,13 +16,20 @@ class GameView : View
       "        "
     )
 
-    font = Font( "/System/Fonts/Asheville-Sans-14-Bold.pft" )
+    font     = Font( "/System/Fonts/Asheville-Sans-14-Bold.pft" )
+    bg_drawn : Logical
 
   METHODS
     method init
+      font.tracking = 4
 
     method on_draw
-      # Display.clear( Color.WHITE )
-      Display.clear( bg_pattern )
+      if (not bg_drawn)
+        # Display.clear( Color.WHITE )
+        Display.clear( bg_pattern )
+        #Display.clip = font.bounds( "Rogue", Display.center )
+        bg_drawn = true
+      endIf
       font.draw( "Rogue", Display.center )
+      Line(Display.at(0,0),Display.at(1,1)).draw( Color.BLACK, 3 )
 endClass

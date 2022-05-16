@@ -5,6 +5,7 @@ class Font
     filepath : String
     leading  = 0  # Spacing between lines
     tracking = 0  # Spacing between characters
+    anchor   = Anchor.CENTER : Anchor
     native "LCDFont* font;"
 
   METHODS
@@ -17,17 +18,24 @@ class Font
               |  Rogue_playdate->system->logToConsole( "Error loading font '%s': %s", filepath, error );
               |}
 
+    method bounds( text:String, at_position:XY )->Box
+      return Box( at_position, measure(text) ).relative_to( anchor )
+
     method draw( text:String, x:Int32, y:Int32 )
+      draw( text, XY(x,y) )
+
+    method draw( text:String, pos:XY )
+      if (anchor != Anchor.TOP_LEFT)
+        pos = Box(pos,measure(text)).relative_to( anchor ).position
+      endIf
+
       native @|if ($this->font)
               |{
               |  Rogue_playdate->graphics->setFont( $this->font );
               |  Rogue_playdate->graphics->setTextLeading( $leading );
               |  Rogue_playdate->graphics->setTextTracking( $tracking );
-              |  Rogue_playdate->graphics->drawText( $text->data->as_utf8, $text->data->count, kUTF8Encoding, $x, $y );
+              |  Rogue_playdate->graphics->drawText( $text->data->as_utf8, $text->data->count, kUTF8Encoding, $pos.x, $pos.y );
               |}
-
-    method draw( text:String, xy:XY )
-      draw( text, xy.x, xy.y )
 
     method measure( text:String )->XY
       local w, h : Int32
@@ -37,5 +45,6 @@ class Font
               |       $text->data->count, kUTF8Encoding, $tracking );
               |  $h = Rogue_playdate->graphics->getFontHeight( $this->font );
               |}
+      return XY(w,h)
 endClass
 

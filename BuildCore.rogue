@@ -104,6 +104,7 @@ routine build( &simulator, &show )
     cmd      +=  " --output=$/Source/RogueProgram"(folder)
     cmd      += '' --libraries="$/Source/Libraries;Libraries/RPD/Libraries/Rogue"''(File.esc(r2_folder))
     cmd      +=  " --gc=manual"
+    cmd      +=  " --real=32"
     execute cmd
   endIf
 
