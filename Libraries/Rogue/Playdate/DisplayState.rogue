@@ -1,0 +1,26 @@
+module Playdate
+
+class DisplayState
+  PROPERTIES
+    next_state : DisplayState
+
+  METHODS
+    method advance_state
+      Display.next_state_requested = true
+
+    method after_draw
+      noAction
+
+    method change_state( state:DisplayState )
+      next_state = state
+      Display.next_state_requested = true
+
+    method on_draw
+      noAction
+
+    method queue_state( state:DisplayState )
+      local cur = this
+      while (cur.next_state) cur .= next_state
+      cur.next_state = state
+endClass
+

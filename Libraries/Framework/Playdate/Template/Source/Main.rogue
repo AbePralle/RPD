@@ -1,29 +1,28 @@
 uses Playdate
 
-Screen.add( GameView() )
+Display.add( GameView() )
+Display.state = DisplayState()
 
 class GameView : View
   PROPERTIES
     bg_pattern = Pattern(
-      "# # # # "...
-      " # # # #"...
-      "# # # # "...
-      " # # # #"...
-      "# # # # "...
-      " # # # #"...
-      "# # # # "...
-      " # # # #"
+      "        "...
+      "        "...
+      "        "...
+      "   #    "...
+      "        "...
+      "        "...
+      "        "...
+      "        "
     )
 
-  METHODS
-    method on_draw
-      # Display.clear( Color.BLACK )
-      Display.clear( bg_pattern )
-      Graphics.font.draw( "Rogue", Display.center )
-endClass
-
-class Graphics [singleton]
-  PROPERTIES
     font = Font( "/System/Fonts/Asheville-Sans-14-Bold.pft" )
-endClass
 
+  METHODS
+    method init
+
+    method on_draw
+      # Display.clear( Color.WHITE )
+      Display.clear( bg_pattern )
+      font.draw( "Rogue", Display.center )
+endClass

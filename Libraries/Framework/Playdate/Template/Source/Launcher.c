@@ -19,9 +19,6 @@ int eventHandler(PlaydateAPI* pd, PDSystemEvent event, uint32_t arg)
 	{
     Rogue_playdate = pd;
     Rogue_launch();
-
-		// Note: If you set an update callback in the kEventInit handler, the system assumes the
-    // game is pure C and doesn't run any Lua code in the game
 		pd->system->setUpdateCallback(update, pd);
 	}
 
@@ -29,6 +26,7 @@ int eventHandler(PlaydateAPI* pd, PDSystemEvent event, uint32_t arg)
 }
 
 
+/*
 #define TEXT_WIDTH 86
 #define TEXT_HEIGHT 16
 
@@ -36,10 +34,12 @@ int x = (400-TEXT_WIDTH)/2;
 int y = (240-TEXT_HEIGHT)/2;
 int dx = 1;
 int dy = 2;
+*/
 
 static int update( void* playdate_api )
 {
   PlaydateRoutine__render__RogueInt64( (RogueInt64)playdate_api );
+  Rogue_collect_garbage();  // executes GC if new allocation threshold has been reached
 
 /*
 	PlaydateAPI* pd = userdata;
@@ -57,8 +57,6 @@ static int update( void* playdate_api )
 	if ( y < 0 || y > LCD_ROWS - TEXT_HEIGHT )
 		dy = -dy;
 */
-
-  Rogue_collect_garbage();  // executes GC if new allocation threshold has been reached
 
 	return 1;
 }

@@ -5,18 +5,49 @@ class Display
     width  = native("LCD_COLUMNS")->Int32
     height = native("LCD_ROWS")->Int32
 
+  GLOBAL PROPERTIES
+    views                = View[]
+    state                = DisplayState()
+    next_state_requested : Logical
+
   GLOBAL METHODS
+    method add( view:View )
+      views.add( view )
+
+    method advance_state
+      next_state_requested = true
+
     method center->XY
       return XY( width/2, height/2 )
+
+    method change_state( next_state:DisplayState )
+      if (state) state.change_state( next_state )
+      else       @state = next_state
 
     method clear( color:Color )
       native @|Rogue_playdate->graphics->clear( $color.value );
 
     method clear( pattern:Pattern )
-      native @|LCDPattern* pattern = (LCDPattern*) &$pattern;
-              |Rogue_playdate->graphics->clear( pattern );
+      native @|Rogue_playdate->graphics->clear( (LCDColor)&$pattern );
+
+    method draw
+      update_state
+      state.on_draw
+      (forEach in views).draw
+      state.after_draw
+
+    method queue_state( next_state:DisplayState )
+      state.queue_state( next_state )
+
+    method set_state( new_state:DisplayState )
+      change_state( new_state )
 
     method size->XY
       return XY(width,height)
 
+    method update_state
+      while (next_state_requested)
+        next_state_requested = false
+        if (state.next_state) @state .= next_state
+      endWhile
 endClass

@@ -8,11 +8,10 @@ $include "Playdate/Color.rogue"
 $include "Playdate/Display.rogue"
 $include "Playdate/Font.rogue"
 $include "Playdate/Log.rogue"
-$include "Playdate/PDLanguage.rogue"
+$include "Playdate/Language.rogue"
 $include "Playdate/Pattern.rogue"
 $include "Playdate/PlaydateGraphics.rogue"
-$include "Playdate/Screen.rogue"
-$include "Playdate/ScreenState.rogue"
+$include "Playdate/DisplayState.rogue"
 $include "Playdate/View.rogue"
 
 class Playdate
@@ -25,10 +24,10 @@ class Playdate
       native @|Rogue_playdate->system->drawFPS($x,$y);
 
     #method message->String
-    #return "[$,$,$]" (PDLanguage.ENGLISH,PDLanguage.JAPANESE,PDLanguage.UNKNOWN)
+    #return "[$,$,$]" (Language.ENGLISH,Language.JAPANESE,Language.UNKNOWN)
 
     method render
-      Screen.draw
+      Display.draw
       #Graphics.font.draw( "Testing", Display.width/2, Display.height/2 )
 endClass
 

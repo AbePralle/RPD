@@ -90,7 +90,7 @@ routine build( &simulator, &show )
   local folder = "Build/$"(target)
   File.create_folder( folder )
   File.create_folder( folder/"Source" )
-  File.sync_from( Files("Source/**.c"), folder/"Source" )
+  File.sync_from( Files("Source/**.c"), folder/"Source", &keep_unused )
 
   if (File.exists("Source/Main.rogue"))
     local r2_filepath = System.find_program("r2")
