@@ -1,8 +1,52 @@
 module IntegerGeometry
 uses Playdate
 
+augment Box
+  METHODS
+    method draw( color:Color, thickness=1:Int32 )
+      if (thickness == 1)
+        native @|Rogue_playdate->graphics->drawRect( $position.x, $position.y, $size.x, $size.y, $color.value );
+      else
+        #Line(position.x,position.y,position.x+(size.x-1),position.y).draw( color, thickness )
+        local half_th = thickness / 2
+        Line( position+XY(0,half_th),        position+XY(size.x,half_th)        ).draw( color, thickness )
+        Line( position+XY(half_th,0),        position+XY(half_th,size.y)        ).draw( color, thickness )
+
+        half_th = thickness - thickness/2
+        Line( position+XY(0,size.y-half_th), position+XY(size.x,size.y-half_th) ).draw( color, thickness )
+        Line( position+XY(size.x-half_th,0), position+XY(size.x-half_th,size.y) ).draw( color, thickness )
+      endIf
+
+    method fill( color:Color )
+      native @|Rogue_playdate->graphics->fillRect( $position.x, $position.y, $size.x, $size.y, $color.value );
+
+endAugment
+
+augment Circle
+  METHODS
+    method draw( color:Color, thickness=1:Int32, begin=Degrees(0):Degrees, end=Degrees(0):Degrees )
+      native @|Rogue_playdate->graphics->drawEllipse( $position.x-$radius, $position.y-$radius, $radius*2, $radius*2,
+              |    $thickness, $begin.value, $end.value, $color.value );
+
+    method fill( color:Color, begin=Degrees(0):Degrees, end=Degrees(0):Degrees )
+      native @|Rogue_playdate->graphics->fillEllipse( $position.x-$radius, $position.y-$radius, $radius*2, $radius*2,
+              |    $begin.value, $end.value, $color.value );
+endAugment
+
+augment Ellipse
+  METHODS
+    method draw( color:Color, thickness=1:Int32, begin=Degrees(0):Degrees, end=Degrees(0):Degrees )
+      native @|Rogue_playdate->graphics->drawEllipse( $position.x-($size.x>>1), $position.y-($size.y>>1),
+              |    $size.x, $size.y, $thickness, $begin.value, $end.value, $color.value );
+
+    method fill( color:Color, begin=Degrees(0):Degrees, end=Degrees(0):Degrees )
+      native @|Rogue_playdate->graphics->fillEllipse( $position.x-($size.x>>1), $position.y-($size.y>>1),
+              |    $size.x, $size.y, $begin.value, $end.value, $color.value );
+endAugment
+
 augment Line
   METHODS
-    method draw( color:Color, width=1:Int32 )
-      native @|Rogue_playdate->graphics->drawLine( $a.x, $a.y, $b.x, $b.y, $width, $color.value );
+    method draw( color:Color, thickness=1:Int32, cap=LineCapStyle.BUTT:Int32 )
+      native @|Rogue_playdate->graphics->setLineCapStyle( $cap );
+              |Rogue_playdate->graphics->drawLine( $a.x, $a.y, $b.x, $b.y, $thickness, $color.value );
 endAugment

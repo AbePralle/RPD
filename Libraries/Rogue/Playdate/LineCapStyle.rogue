@@ -1,0 +1,13 @@
+module Playdate
+
+class LineCapStyle
+  # Specified line endcap style. Used with Line.draw(color,width=1,cap=BUTT)
+  #
+  # BUTT   - Square ends that do not extend beyond specified endpoints.
+  # SQUARE - Square ends that extend beyond endpoints proportionate to 'width'.
+  # ROUND  - Round ends that extend beyond endpoints proportionate to 'width'.
+  DEFINITIONS
+    BUTT   = native("kLineCapStyleButt")->Int32
+    SQUARE = native("kLineCapStyleSquare")->Int32
+    ROUND  = native("kLineCapStyleRound")->Int32
+endClass
