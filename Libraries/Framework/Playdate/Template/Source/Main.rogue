@@ -28,6 +28,7 @@ class GameView : View
     )
 
     font     = Font( "/System/Fonts/Asheville-Sans-14-Bold.pft" )
+    plane    = Bitmap( "Images/plane1" )
     bg_drawn : Logical
 
   METHODS
@@ -44,7 +45,9 @@ class GameView : View
         Box(8,8,24,24).fill(Color.BLACK)
         #Box(8,8,24,24).draw(Color.BLACK,1)
         bg_drawn = true
+        plane.draw( Display.center, BitmapFlip.V )
       endIf
+      plane.draw( Random.xy(Display.size), BitmapFlip.V )
       #font.draw( "Rogue", Display.center )
       #Line(Display.at(0.25,0.25),Display.at(0.75,0.75)).draw( Color.BLACK, 10, LineCapStyle.BUTT )
       #Line(8,8,Display.width-8,8).draw( Color.BLACK, 4, LineCapStyle.BUTT )

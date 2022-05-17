@@ -26,6 +26,12 @@ class Bitmap
               |    (uint8_t**)&$this->data );
               |}
 
+    method draw( position:XY, flip=BitmapFlip.NONE:Int32 )
+      native @|if ($this->bitmap)
+              |{
+              |  Rogue_playdate->graphics->drawBitmap( $this->bitmap, $position.x, $position.y, $flip );
+              |}
+
     method on_cleanup
       native @|if ($this->bitmap)
               |{

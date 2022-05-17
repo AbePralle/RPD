@@ -1,0 +1,9 @@
+module Playdate
+
+class BitmapFlip
+  DEFINITIONS
+    NONE = native("kBitmapUnflipped")->Int32
+    H    = native("kBitmapFlippedX")->Int32
+    V    = native("kBitmapFlippedY")->Int32
+    HV   = native("kBitmapFlippedXY")->Int32
+endClass

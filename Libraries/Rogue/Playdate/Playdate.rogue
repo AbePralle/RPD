@@ -4,6 +4,7 @@ uses IntegerGeometry [export]
 
 #$include "Playdate/Canvas.rogue"
 $include "Playdate/Bitmap.rogue"
+$include "Playdate/BitmapFlip.rogue"
 $include "Playdate/Color.rogue"
 $include "Playdate/Display.rogue"
 $include "Playdate/Font.rogue"

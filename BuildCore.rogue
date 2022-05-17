@@ -87,10 +87,11 @@ endRoutine
 
 routine build( &simulator, &show )
   local target = which{ simulator:"Simulator" || "Device" }
-  local folder = "Build/$"(target)
-  File.create_folder( folder )
-  File.create_folder( folder/"Source" )
-  File.sync_from( Files("Source/**.c"), folder/"Source", &keep_unused )
+  local build_folder = "Build/$"(target)
+  File.create_folder( build_folder )
+  File.create_folder( build_folder/"Source" )
+  File.sync_from( Files("Source/**.c"), build_folder/"Source" )
+  File.sync_from( Files("Assets/Images/**"), build_folder/"Source/Images", &verbose )
 
   if (File.exists("Source/Main.rogue"))
     local r2_filepath = System.find_program("r2")
@@ -101,16 +102,16 @@ routine build( &simulator, &show )
     assert String.exists(r2_folder)
     r2_folder = File.folder( File.folder(r2_folder) )
     local cmd =  "r2 Source/Main.rogue"
-    cmd      +=  " --output=$/Source/RogueProgram"(folder)
+    cmd      +=  " --output=$/Source/RogueProgram"(build_folder)
     cmd      += '' --libraries="$/Source/Libraries;Libraries/RPD/Libraries/Rogue"''(File.esc(r2_folder))
     cmd      +=  " --gc=manual"
     cmd      +=  " --real=32"
     execute cmd
   endIf
 
-  local listing = File.listing( folder/"Source/**.c" )
+  local listing = File.listing( build_folder/"Source/**.c" )
   forEach (file in rewriter=listing.rewriter)
-    rewriter.write( file.after_first(folder+'/') )
+    rewriter.write( file.after_first(build_folder+'/') )
   endForEach
 
   local settings = JSON.load(File("Settings.json"))
@@ -119,12 +120,12 @@ routine build( &simulator, &show )
   local cmake_lists = String(File("Project/CMakeLists.txt"))
   cmake_lists .= replacing( "$(FILENAME)", details//filename->String )
   cmake_lists .= replacing( "$(C_FILES)", listing.join(' ') )
-  File.save( folder/"CMakeLists.txt", cmake_lists )
+  File.save( build_folder/"CMakeLists.txt", cmake_lists )
 
   local makefile = String(File("Project/Makefile"))
   makefile .= replacing( "$(FILENAME)", details//filename->String )
   makefile .= replacing( "$(C_FILES)", listing.join(" \\\n\t") )
-  File.save( folder/"Makefile", makefile )
+  File.save( build_folder/"Makefile", makefile )
 
   local pdxinfo = String(File("Project/Source/pdxinfo"))
   pdxinfo .= replacing( "$(TITLE)",       details//name->String )
@@ -132,14 +133,14 @@ routine build( &simulator, &show )
   pdxinfo .= replacing( "$(DESCRIPTION)", details//description->String )
   pdxinfo .= replacing( "$(BUNDLE_ID)",   details//bundle_id->String )
   pdxinfo .= replacing( "$(IMAGE_PATH)" , details//image_path->String )
-  File.save( folder/"Source/pdxinfo", pdxinfo )
+  File.save( build_folder/"Source/pdxinfo", pdxinfo )
 
   if (simulator)
-    execute "cd $ && cmake . && make"(folder)
+    execute "cd $ && cmake . && make"(build_folder)
   else
     local local_settings = JSON.load_table("LocalSettings.json")
     local path = local_settings//playdate_sdk->String/"C_API/buildsupport/arm.cmake"
-    execute "cd $ && cmake -DCMAKE_TOOLCHAIN_FILE=$ . && make"(folder,File.esc(path))
+    execute "cd $ && cmake -DCMAKE_TOOLCHAIN_FILE=$ . && make"(build_folder,File.esc(path))
     local output_path = Process.run("pwd",&env)->String.trimmed/"Build/Device"
     output_path /= "$-Device"(details//filename->String)
     if (File.exists(output_path))
