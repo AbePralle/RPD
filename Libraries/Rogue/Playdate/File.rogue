@@ -1,0 +1,123 @@
+module Playdate
+
+#{
+class File( filepath:String ) [compound]
+  NATIVE
+    nativeHeader @|#include <stdio.h>
+                  |#include <sys/stat.h>
+
+  METHODS
+    method exists->Logical
+      local filepath = resolved.filepath
+      native @|struct stat s;
+      return native("(stat((char*)$filepath->data->as_utf8, &s) == 0)")->Logical
+
+    method filename->File
+      local filepath = resolved.filepath
+      local i = filepath.locate_last( '/' )
+      if (not i?) return this
+      return File( filepath.from(i.value+1) )
+
+    method folder->File
+      local filepath = resolved.filepath
+
+      # Replace multiple slashes with single slashes
+      while (filepath.contains("//")) filepath = filepath.replacing( "//", "/" )
+
+      # Discard trailing slash
+      if (filepath.ends_with('/')) filepath = filepath.leftmost( -1 )
+
+      if (filepath.count == 0) return File("")
+
+      local i1 = filepath.locate_last( '/' )
+      if (not i1?) return File("")
+      if (i1.value == 0) return File(filepath.leftmost(1))  # /abc -> /
+
+      return File( filepath.from(0, i1.value-1) )
+
+    method load_as_bytes( &discard_bom )->Byte[]
+      # discard_bom
+      #   Discard the Byte Order Marker, if it exists.
+      local count = size
+      local bytes = Byte[]( count )
+      use reader = this.reader
+        if (count >= 3 and discard_bom)
+          # Discard byte order marker if it exists
+          local b0 = reader.read
+          local b1 = reader.read
+          local b2 = reader.read
+          if (b0 == 0xEF and b1 == 0xBB and b2 == 0xBF)
+            count -= 3
+          else
+            bytes = Byte[]( count )
+            bytes.add( b0 )
+            bytes.add( b1 )
+            bytes.add( b2 )
+          endIf
+        endIf
+
+        ensure<<bytes>>( count )
+        reader.read( bytes, count )
+      endUse
+      return bytes
+
+    method load_as_string( encoding=StringEncoding.AUTODETECT:StringEncoding )->String
+      local bytes = load_as_bytes( &discard_bom )
+      return String( bytes, encoding )
+
+    method operator/( other:File )->File
+      return File( resolved.filepath / other.resolved.filepath )
+
+    method operator/( other_filepath:String )->File
+      return File( resolved.filepath / File(other_filepath).resolved.filepath )
+
+    method reader->FileReader
+      return FileReader( resolved.filepath )
+
+    method resolved->File
+      local filepath = this.filepath
+
+      if (System.is_windows)
+        local n = filepath.count('%')
+        while (n >= 2)
+          local i1 = filepath.locate('%').value
+          local i2 = filepath.locate('%',i1+1).value
+          local name  = filepath.from(i1+1,i2-1)
+          local value = which{ System.env[name] || "" }
+          filepath .= replacing_at( i1, (i2-i1)+1, value )
+          n -= 2
+        endWhile
+      endIf
+
+      if (System.is_windows) filepath = filepath.replacing( '\\', '/' )
+
+      if (filepath == "~" or filepath.begins_with("~/"))
+        local home_folder : String
+        if (System.is_windows)
+          home_folder = System.env//HOMEDRIVE + System.env//HOMEPATH
+        else
+          home_folder = System.env//HOME
+        endIf
+        if (home_folder and home_folder.count)
+          filepath = home_folder + filepath.rightmost(-1)
+          return File(filepath)
+        endIf
+      endIf
+      return File(filepath)
+
+    method size->Int64
+      local filepath = resolved.filepath
+      local size : Int64
+      native @|FILE* fp = fopen( (char*)$filepath->data->as_utf8, "rb" );
+               if (native("!fp")->Logical) return 0
+      native @|
+              |fseek( fp, 0, SEEK_END );
+              |$size = (RogueInt64) ftell( fp );
+              |fclose( fp );
+      return size;
+
+    method to->String
+      return filepath
+
+endClass
+}#

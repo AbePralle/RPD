@@ -1,4 +1,4 @@
-module IntegerGeometry
+module Geometry
 uses Playdate
 
 augment Box

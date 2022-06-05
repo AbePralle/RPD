@@ -1,47 +1,16 @@
 module Playdate
 
-class Display
-  DEFINITIONS
-    width  = native("LCD_COLUMNS")->Int32
-    height = native("LCD_ROWS")->Int32
-
-  GLOBAL PROPERTIES
-    views                = View[]
-    state                = DisplayState()
-    clip                 : Box?
-    next_state_requested : Logical
-
-  GLOBAL METHODS
-    method add( view:View )
-      views.add( view )
-
-    method advance_state
-      next_state_requested = true
-
-    method at( u:Real, v:Real )->XY
-      return XY( (width*u).floor, (height*v).floor )
-
-    method center->XY
-      return XY( width/2, height/2 )
-
-    method change_state( next_state:DisplayState )
-      if (state) state.change_state( next_state )
-      else       @state = next_state
+class Display : Canvas [singleton]
+  METHODS
+    method init
+      width  = native("LCD_COLUMNS")->Int32
+      height = native("LCD_ROWS")->Int32
 
     method clear( color:Color )
       native @|Rogue_playdate->graphics->clear( $color.value );
 
     method clear( pattern:Pattern )
       native @|Rogue_playdate->graphics->clear( (LCDColor)&$pattern );
-
-    method draw
-      update_state
-      state.on_draw
-      (forEach in views).draw
-      state.after_draw
-
-    method queue_state( next_state:DisplayState )
-      state.queue_state( next_state )
 
     method set_clip( new_clip:Box? )
       @clip = new_clip
@@ -52,15 +21,4 @@ class Display
         native @|Rogue_playdate->graphics->clearClipRect();
       endIf
 
-    method set_state( new_state:DisplayState )
-      change_state( new_state )
-
-    method size->XY
-      return XY(width,height)
-
-    method update_state
-      while (next_state_requested)
-        next_state_requested = false
-        if (state.next_state) @state .= next_state
-      endWhile
 endClass

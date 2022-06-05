@@ -1,24 +1,31 @@
 module Playdate
 
-class DisplayState
+class ViewState
   PROPERTIES
-    next_state : DisplayState
+    next_state : ViewState
+    _exit_state : Logical
 
   METHODS
     method advance_state
-      Display.next_state_requested = true
+      _exit_state = true
 
     method after_draw
       noAction
 
-    method change_state( state:DisplayState )
+    method change_state( state:ViewState )
       next_state = state
-      Display.next_state_requested = true
+      _exit_state = true
+
+    method on_enter
+      noAction
+
+    method on_exit
+      noAction
 
     method on_draw
       noAction
 
-    method queue_state( state:DisplayState )
+    method queue_state( state:ViewState )
       local cur = this
       while (cur.next_state) cur .= next_state
       cur.next_state = state

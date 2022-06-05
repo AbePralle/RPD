@@ -102,6 +102,7 @@ routine build( &simulator, &show )
     assert String.exists(r2_folder)
     r2_folder = File.folder( File.folder(r2_folder) )
     local cmd =  "r2 Source/Main.rogue"
+    cmd      +=  " Standard StandardIO"
     cmd      +=  " --output=$/Source/RogueProgram"(build_folder)
     cmd      += '' --libraries="$/Source/Libraries;Libraries/RPD/Libraries/Rogue"''(File.esc(r2_folder))
     cmd      +=  " --gc=manual"

@@ -41,23 +41,6 @@ static int update( void* playdate_api )
   PlaydateRoutine__render__RogueInt64( (RogueInt64)playdate_api );
   Rogue_collect_garbage();  // executes GC if new allocation threshold has been reached
 
-/*
-	PlaydateAPI* pd = userdata;
-
-	pd->graphics->setFont(font);
-  RogueString* message = RogueRoutine__hello();
-	pd->graphics->drawText(message->data->as_utf8, message->data->count, kASCIIEncoding, x, y);
-
-	x += dx;
-	y += dy;
-
-	if ( x < 0 || x > LCD_COLUMNS - TEXT_WIDTH )
-		dx = -dx;
-
-	if ( y < 0 || y > LCD_ROWS - TEXT_HEIGHT )
-		dy = -dy;
-*/
-
 	return 1;
 }
 

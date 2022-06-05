@@ -1,0 +1,58 @@
+module Playdate
+
+class Canvas
+  GLOBAL PROPERTIES
+    current : Canvas
+
+  PROPERTIES
+    clip          : Box?
+    view          : View
+    width, height : Int32
+
+  METHODS
+    method init( width, height )
+
+    method after_draw
+      noAction
+
+    method at( u:Real, v:Real )->XY
+      return XY( (width*u).floor, (height*v).floor )
+
+    method center->XY
+      return XY( width/2, height/2 )
+
+    method clear( color:Color )
+      #native @|Rogue_playdate->graphics->clear( $color.value );
+
+    method clear( pattern:Pattern )
+      #native @|Rogue_playdate->graphics->clear( (LCDColor)&$pattern );
+
+    method render
+      clip = null
+      temporarily Canvas.current = this
+        on_draw
+        if (view)
+          view.update
+          view.draw
+        endIf
+        after_draw
+      endTemporarily
+
+    method on_draw
+      noAction
+
+    method set_clip( new_clip:Box? )
+      #{
+      @clip = new_clip
+      if (new_clip.exists)
+        native @|Rogue_playdate->graphics->setScreenClipRect( $new_clip.value.position.x,
+                |  $new_clip.value.position.y, $new_clip.value.size.x, $new_clip.value.size.y );
+      else
+        native @|Rogue_playdate->graphics->clearClipRect();
+      endIf
+      }#
+
+    method size->XY
+      return XY(width,height)
+
+endClass

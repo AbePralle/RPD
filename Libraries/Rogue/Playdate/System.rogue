@@ -1,0 +1,5 @@
+augment System
+  GLOBAL METHODS
+    method is_playdate->Logical
+      return $target("Playdate")
+endAugment

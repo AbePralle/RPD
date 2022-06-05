@@ -1,7 +1,6 @@
 uses Playdate
 
-Display.add( GameView() )
-Display.state = DisplayState()
+GameView()
 
 class GameView : View
   PROPERTIES
@@ -16,39 +15,48 @@ class GameView : View
       "        "
     )
 
-    circle_pattern = Pattern(
-      "#####   "...
-      "#####   "...
-      "#####   "...
-      "#####   "...
-      "        "...
-      "        "...
-      "        "...
-      "        "
+    bg_pattern2 = Pattern(
+      "#       "...
+      " #      "...
+      "  #     "...
+      "   #    "...
+      "    #   "...
+      "     #  "...
+      "      # "...
+      "       #"
     )
 
-    font     = Font( "/System/Fonts/Asheville-Sans-14-Bold.pft" )
-    plane    = Bitmap( "Images/plane1" )
-    bg_drawn : Logical
+    once = false
+    pattern = bg_pattern : Pattern
+
+    font = Font( "/System/Fonts/Asheville-Sans-14-Bold.pft" )
+    #plane    = Bitmap( "Images/plane1" )
 
   METHODS
-    method init
+    #method init
       #font.tracking = 4
 
     method on_draw
-      if (not bg_drawn)
         # Display.clear( Color.WHITE )
-        Display.clear( bg_pattern )
+        Display.clear( pattern )
+        use message = StringPool
+          message.print Playdate.time_ms
+          font.draw( message, canvas.center )
+        endUse
+
+        #{
         #Display.clip = font.bounds( "Rogue", Display.center )
         font.draw( Display.size, Display.center )
         Circle(Display.center,Display.size.min/2-8).draw( Color.XOR, 16, &begin=Degrees(90) )
         Box(8,8,24,24).fill(Color.BLACK)
         #Box(8,8,24,24).draw(Color.BLACK,1)
-        bg_drawn = true
-        plane.draw( Display.center, BitmapFlip.V )
-      endIf
-      plane.draw( Random.xy(Display.size), BitmapFlip.V )
+        }#
+        #plane.draw( Display.center, BitmapFlip.V )
+      #plane.draw( Random.xy(Display.size), BitmapFlip.V )
       #font.draw( "Rogue", Display.center )
       #Line(Display.at(0.25,0.25),Display.at(0.75,0.75)).draw( Color.BLACK, 10, LineCapStyle.BUTT )
       #Line(8,8,Display.width-8,8).draw( Color.BLACK, 4, LineCapStyle.BUTT )
+
+    method on_update
+      invalidate( Corners( at(0.25,0.25), at(0.75,0.75) )->Box )
 endClass
