@@ -1,15 +1,19 @@
 module Playdate
 
-class Font
+class Font : UIFont
   PROPERTIES
     filepath : String
     leading  = 0  # Spacing between lines
     tracking = 0  # Spacing between characters
-    anchor   = Anchor.CENTER : Anchor
     native "LCDFont* font;"
 
   METHODS
-    method init( filepath )
+    method init( name:String )
+      init( File(name.with_prefix("/System/Fonts/").with_suffix(".pft")) )
+
+    method init( file:File, name=null )
+      filepath = file.filepath
+      if (not name) name = File(filepath).filename
       native @|const char* error = 0;
               |const char* filepath = $filepath->data->as_utf8;
               |$this->font = Rogue_playdate->graphics->loadFont( filepath, &error );
@@ -18,31 +22,49 @@ class Font
               |  Rogue_playdate->system->logToConsole( "Error loading font '%s': %s", filepath, error );
               |}
 
-    method bounds( text:String, at_position:XY )->Box
+    method init( existing:Font )
+      name = existing.name
+      filepath = existing.filepath
+      leading = existing.leading
+      tracking = existing.tracking
+      native @|$font = $existing->font;
+
+    method cloned->Font
+      return Font( this )
+
+    method bounds( text:String, at_position:XY, anchor=Anchor.TOP_LEFT:Anchor )->Box
       return Box( at_position, measure(text) ).relative_to( anchor )
 
-    method draw( text:String, x:Int32, y:Int32 )
-      draw( text, XY(x,y) )
-
-    method draw( text:String, pos:XY )
-      if (anchor != Anchor.TOP_LEFT)
-        pos = Box(pos,measure(text)).relative_to( anchor ).position
-      endIf
-
+    method draw( text:String, position:XY )
       native @|if ($this->font)
               |{
               |  Rogue_playdate->graphics->setFont( $this->font );
               |  Rogue_playdate->graphics->setTextLeading( $leading );
               |  Rogue_playdate->graphics->setTextTracking( $tracking );
-              |  Rogue_playdate->graphics->drawText( $text->data->as_utf8, $text->data->count, kUTF8Encoding, $pos.x, $pos.y );
+              |  Rogue_playdate->graphics->drawText( $text->data->as_utf8, $text->data->count, kUTF8Encoding,
+              |                                      $position.x, $position.y );
               |}
 
-    method measure( text:String )->XY
+    method height->Int32
+      return leading + native("(RogueInt32)(Rogue_playdate->graphics->getFontHeight( $this->font ))")->Int32
+
+    method measure( ch:Character )->XY
+      use buffer = StringPool
+        buffer.print ch   # could be multiple bytes in UTF8
+        return measure( buffer )
+      endUse
+
+    method measure( text:String, i1=0:Int32, count=-1:Int32 )->XY
+      if (count == -1) count = text.count - i1
+
+      local byte_limit  = text.set_cursor( i1+count )
+      local byte_offset = text.set_cursor( i1 )
+
       local w, h : Int32
       native @|if ($this->font)
               |{
-              |  $w = Rogue_playdate->graphics->getTextWidth( $this->font, $text->data->as_utf8,
-              |       $text->data->count, kUTF8Encoding, $tracking );
+              |  $w = Rogue_playdate->graphics->getTextWidth( $this->font, $text->data->as_utf8+$byte_offset,
+              |       (byte_limit - byte_offset), kUTF8Encoding, $tracking );
               |  $h = Rogue_playdate->graphics->getFontHeight( $this->font );
               |}
       return XY(w,h)

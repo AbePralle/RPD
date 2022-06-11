@@ -1,6 +1,9 @@
 module Playdate
 
 class Display : Canvas [singleton]
+  PROPERTIES
+    refresh_rate = 30
+
   METHODS
     method init
       width  = native("LCD_COLUMNS")->Int32
@@ -12,6 +15,19 @@ class Display : Canvas [singleton]
     method clear( pattern:Pattern )
       native @|Rogue_playdate->graphics->clear( (LCDColor)&$pattern );
 
+    method draw_fps( x:Int32, y:Int32 )
+      native @|Rogue_playdate->system->drawFPS($x,$y);
+
+    method draw_fps( position:XY )
+      native @|Rogue_playdate->system->drawFPS($position.x,$position.y);
+
+    method render
+      if (not view)
+        println "WARNING: No view has been setup for the display. Create an extended View and be sure to call prior.init if you override init()."
+        view = View()  # dummy
+      endIf
+      prior.render
+
     method set_clip( new_clip:Box? )
       @clip = new_clip
       if (new_clip.exists)
@@ -20,5 +36,8 @@ class Display : Canvas [singleton]
       else
         native @|Rogue_playdate->graphics->clearClipRect();
       endIf
+
+    method set_refresh_rate( @refresh_rate )
+      native @|Rogue_playdate->display->setRefreshRate( $refresh_rate );
 
 endClass

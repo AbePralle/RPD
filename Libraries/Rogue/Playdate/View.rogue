@@ -1,7 +1,5 @@
 module Playdate
 
-#uses Utility/Action
-
 #$include "Event.rogue"
 #$include "Keyboard.rogue"
 #$include "Pointer.rogue"
@@ -30,33 +28,14 @@ module Playdate
 #$include "UIVerticalLayout.rogue"
 #$include "UIWidget.rogue"
 
-class View
+class View : UI
   GLOBAL PROPERTIES
     current : View
 
   PROPERTIES
     canvas         : Canvas
-    dirty_bounds   : Box?
-    clip           : Box?
-    state          = ViewState()
-
-
-    #{
-    bounds : Box
-    }#
-
-    #layers = ViewStackLayout()
-
-    #{
-    theme  : ViewTheme
-
-    pointer_focus  : ViewComponent
-    keyboard_focus : ViewComponent
-    }#
-
-    #{
-    actions : Action
-    }#
+    state          = ViewState().[ view=this ]
+    last_update_ms : Int32
 
   METHODS
     method init
@@ -64,284 +43,64 @@ class View
 
     method init( canvas )
       canvas.view = this
-      invalidate
-
-      #{
-    method after( e:KeyEvent )
-      noAction
-
-    method after( e:PointerEvent )
-      noAction
-
-    method after( e:ScrollEvent )
-      noAction
-
-    method after( e:TextEvent )
-      noAction
-
-    method after_resize
-      noAction
-      }#
-
-    method after_update
-      noAction
-
-      #{
-    method add( layer:ViewComponent )
-      layers.add( layer )
-
-    method apply( fn:Function(ViewComponent)->Logical )->Logical
-      return layers.apply( fn )
-      }#
-
-    method at( xp:Real, yp:Real )->XY
-      return XY( size.x*xp, size.y*yp )
-
-      #{
-    method broadcast_message( message:Value )
-      dispatch_message( message )
-      }#
+      bounds = Box( 0, 0, canvas.size )
+      request_redraw
+      temporarily View.current = this
+        prior.init
+      endTemporarily
 
     method change_state( new_state:ViewState )
       state.change_state( new_state )
 
-      #{
-    method clear
-      layers.clear
-      clear_focus
-      dirty_bounds = null
-      clip = null
-
-    method clear_focus
-      keyboard_focus = null
-      pointer_focus = null
-
-    method contains( pos:XY )->Logical
-      return bounds.contains( pos )
-
-    method default_font->ViewFont
-      return theme.default_font
-
-    method default_theme->ViewTheme
-      return @default_theme
-
-    method description->String
-      return layers->String
-
-    method dispatch_message( message:Value )
-      on_message( message )
-      layers.dispatch_message( message )
-
-    method drag_threshold->Real64
-      return 16
-      }#
+    method default_font->UIFont
+      return null
 
     method draw
-      temporarily View.current = this
+      temporarily View.current=this, UI.current=this
         if (dirty_bounds)
           temporarily clip = dirty_bounds
             dirty_bounds = null
+            state.on_draw
             on_draw
-            #layers.draw( clip.value )  # FIXME
-            on_draw_end
+            (forEach in layers).draw( clip.value )
+            after_draw
+            state.after_draw
           endTemporarily
         endIf
       endTemporarily
 
-      #{
-    method find( pos:XY )->ViewComponent
-      return layers.find( pos )
-
-    method handle( e:KeyEvent )
-      View = this
-
-      on( e )
-      if (e.is_consumed) return
-
-      if (keyboard_focus)
-        if (keyboard_focus.is_visible and keyboard_focus.is_input_enabled)
-          keyboard_focus.handle( e )
-        else
-          keyboard_focus.release_keyboard_focus
-          layers.handle( e )
-        endIf
-      else
-        layers.handle( e )
-      endIf
-      if (e.is_consumed) return
-
-      after( e )
-
-    method handle( e:PointerEvent )
-      View = this
-
-      on( e )
-      if (e.is_consumed) return
-
-      if (pointer_focus)
-        if (pointer_focus.is_visible and pointer_focus.is_input_enabled)
-          pointer_focus.handle( e )
-        else
-          pointer_focus.release_pointer_focus
-          layers.handle( e )
-        endIf
-      else
-        layers.handle( e )
-      endIf
-      if (e.is_consumed) return
-
-      after( e )
-
-    method handle( e:ScrollEvent )
-      View = this
-
-      on( e )
-      if (e.is_consumed) return
-
-      if (pointer_focus)
-        pointer_focus.handle( e )
-      else
-        layers.handle( e )
-      endIf
-      if (e.is_consumed) return
-
-      after( e )
-
-    method handle( e:TextEvent )
-      View = this
-
-      on( e )
-      if (e.is_consumed) return
-
-      if (keyboard_focus)
-        keyboard_focus.handle( e )
-      else
-        layers.handle( e )
-      endIf
-      if (e.is_consumed) return
-
-      after( e )
-      }#
-
-    method invalidate
+    method request_redraw
       dirty_bounds = Box(canvas.size)
 
-    method invalidate( bounds:Box? )
+    method request_redraw( bounds:Box? )
       dirty_bounds |= bounds
 
-      #{
-    method on( e:KeyEvent )
-      noAction
-
-    method on( e:PointerEvent )
-      noAction
-
-    method on( e:ScrollEvent )
-      noAction
-
-    method on( e:TextEvent )
-      noAction
-      }#
-
-    method on_draw
-      noAction
-
-    method on_draw_end
-      noAction
-
-      #{
-    method on_message( message:Value )
-      noAction
-
-    method on_resize
-      noAction
-      }#
-
-    method on_update
-      noAction
-
-      #{
-    method on_update_layout
-      # Called after a 'bounds' change to build or rebuild the layout.
-      noAction
-
-    method perform_layout
-      layers.update_layout( bounds )
-
-    method release_focus
-      release_keyboard_focus
-      release_pointer_focus
-
-    method release_keyboard_focus
-      if (keyboard_focus) keyboard_focus.release_pointer_focus
-
-    method release_pointer_focus
-      if (pointer_focus) pointer_focus.release_pointer_focus
-
-    method remove( layer:ViewComponent )
-      layers.remove( layer )
-
-    method request_layout
-      layers.is_modified = true
-
-    method request_redraw
-      dirty_bounds = bounds
-
-    method set_bounds( new_bounds:Box )
-      if (new_bounds == bounds) return
-      @bounds = new_bounds
-      request_layout
-      on_resize
-      layers.handle_resize
-      after_resize
-
-    method set_clip( @clip )
-      noAction # Override in specialized View to have clip take effect
-      }#
-
-    method size->XY
-      return canvas.size
-
-      #{
-    method theme->ViewTheme
-      if (@theme) return @theme
-      theme = default_theme
-      return @theme
-      }#
-
-    method update
-      temporarily View.current = this
-        on_update
-        update_state
-        #if (actions) actions .= update
-        #layers.update
-        after_update
+    method update( bounds:Box )
+      temporarily View.current=this, UI.current=this
+        if (not is_initialized)
+          is_initialized = true
+          on_init
+        endIf
+        local cur_time_ms = System.elapsed_ms
+        local elapsed_ms  = cur_time_ms - last_update_ms
+        local n           = (elapsed_ms * 60) / 1000.0
+        if (n < 1 or n > 15) n = 1
+        while (n >= 0.75)
+          _advance_state
+          state.on_update
+          on_update
+          if (actions) actions .= update
+          (forEach in layers).update
+          after_update
+          state.after_update
+          --n
+        endWhile
+        last_update_ms = cur_time_ms
       endTemporarily
 
-      #{
-    method update( bounds:Box )
-      View = this
-
-      # Must update before layout so that new components created in update() can be measured in
-      # update_layout()
-      update
       update_layout( bounds )
 
-    method update_layout( new_bounds:Box )
-      View = this
-      local bounds_changed = (bounds != new_bounds)
-      if (bounds_changed)
-        bounds = new_bounds
-        if (bounds_changed) dirty_bounds = new_bounds  # Redraw the entire View
-        on_update_layout
-      endIf
-
-      if (layers.count and (bounds_changed or layers.is_modified))
-        perform_layout
-      endIf
-      }#
-
-    method update_state
+    method _advance_state
       while (state._exit_state)
         state._exit_state = false
         state.on_exit

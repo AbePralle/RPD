@@ -29,20 +29,26 @@ class GameView : View
     once = false
     pattern = bg_pattern : Pattern
 
-    font = Font( "/System/Fonts/Asheville-Sans-14-Bold.pft" )
+    font  = Font( File("/System/Fonts/Asheville-Sans-14-Bold.pft") )
+    ticks : Int32
     #plane    = Bitmap( "Images/plane1" )
 
   METHODS
-    #method init
-      #font.tracking = 4
+    method on_init
+      add( UIBoard() )
 
     method on_draw
         # Display.clear( Color.WHITE )
-        Display.clear( pattern )
+        #Display.clear( pattern )
+
+        #{
         use message = StringPool
-          message.print Playdate.time_ms
+          message.print( System.ticks )
           font.draw( message, canvas.center )
         endUse
+        }#
+
+        #Display.draw_fps( XY(0,0) )
 
         #{
         #Display.clip = font.bounds( "Rogue", Display.center )
@@ -58,5 +64,14 @@ class GameView : View
       #Line(8,8,Display.width-8,8).draw( Color.BLACK, 4, LineCapStyle.BUTT )
 
     method on_update
-      invalidate( Corners( at(0.25,0.25), at(0.75,0.75) )->Box )
+      ++ticks
+      request_redraw
+endClass
+
+class UIBoard : UIComponent
+  METHODS
+    method on_draw
+      display_bounds.fill( Color.BLACK )
+
+    method on_update
 endClass

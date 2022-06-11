@@ -1,8 +1,15 @@
 module Playdate
 
+class ViewState<<$ViewType>> : ViewState
+  METHODS
+    method view->$ViewType
+      return @view->(as $ViewType)
+endClass
+
 class ViewState
   PROPERTIES
-    next_state : ViewState
+    view        : View
+    next_state  : ViewState
     _exit_state : Logical
 
   METHODS
@@ -12,8 +19,15 @@ class ViewState
     method after_draw
       noAction
 
+    method after_update
+      noAction
+
+    method canvas->Canvas
+      return @view.canvas
+
     method change_state( state:ViewState )
       next_state = state
+      next_state.view = @view
       _exit_state = true
 
     method on_enter
@@ -25,9 +39,15 @@ class ViewState
     method on_draw
       noAction
 
+    method on_update
+      noAction
+
     method queue_state( state:ViewState )
       local cur = this
       while (cur.next_state) cur .= next_state
       cur.next_state = state
+
+    method view->View
+      return @view
 endClass
 

@@ -1,5 +1,6 @@
 augment System
   GLOBAL METHODS
-    method is_playdate->Logical
-      return $target("Playdate")
+    method elapsed_ms->Int32
+      # Execution time in milliseconds.
+      return native( "Rogue_playdate->system->getCurrentTimeMilliseconds()" )->Int32
 endAugment

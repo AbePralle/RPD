@@ -3,12 +3,13 @@ module Playdate
 augment Rogue::Global
   METHODS
     method configure_standard_output
-      standard_output = Log
+      standard_output = Playdate::Log
 endAugment
 
 class Log : BufferedPrintWriter [singleton]
   METHODS
     method flush( buffer:String )
+      if (buffer.ends_with('\n')) buffer.remove_last
       native @|Rogue_playdate->system->logToConsole( "%s", $buffer->data->as_utf8 );
       buffer.clear
 endClass

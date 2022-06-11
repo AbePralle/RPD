@@ -1,12 +1,14 @@
 # Playdate.rogue
 module Playdate
 uses Geometry [export]
+uses UI [export]
 
 $include Playdate/Bitmap
 $include Playdate/BitmapFlip
 $include Playdate/Canvas
 $include Playdate/Color
 $include Playdate/Display
+$include Playdate/Events
 $include Playdate/Font
 $include Playdate/File
 $include Playdate/Geometry
@@ -20,23 +22,9 @@ $include Playdate/ViewState
 $include Playdate/View
 
 class Playdate
-  GLOBAL PROPERTIES
-    graphics = PlaydateGraphics()
-    message = "hmm"
-
   GLOBAL METHODS
-    method draw_fps( x:Int32, y:Int32 )
-      native @|Rogue_playdate->system->drawFPS($x,$y);
-
-    #method message->String
-    #return "[$,$,$]" (Language.ENGLISH,Language.JAPANESE,Language.UNKNOWN)
-
     method render
       Display.render
-      #Graphics.font.draw( "Testing", Display.width/2, Display.height/2 )
-
-    method time_ms->Int32
-      return native("Rogue_playdate->system->getCurrentTimeMilliseconds()")->Int32
 endClass
 
 nativeHeader @|#include "pd_api.h"
