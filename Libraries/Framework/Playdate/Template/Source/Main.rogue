@@ -35,7 +35,7 @@ class GameView : View
 
   METHODS
     method on_init
-      add( UIBoard() )
+      add( UIFiller.h + UIBoard() + UIFiller.h )
 
     method on_draw
         # Display.clear( Color.WHITE )
@@ -70,8 +70,15 @@ endClass
 
 class UIBoard : UIComponent
   METHODS
+    method init
+      fixed_size = XY(240,240)
+
     method on_draw
-      display_bounds.fill( Color.BLACK )
+      local pos = display_position
+      Box( pos, 60, 60 ).fill(Color.BLACK)
+      Box( pos+XY(60,60), 60, 60 ).fill(Color.BLACK)
+
+      #display_bounds.fill( Color.BLACK )
 
     method on_update
 endClass
