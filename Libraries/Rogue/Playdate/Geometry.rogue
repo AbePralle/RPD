@@ -20,6 +20,14 @@ augment Box
     method fill( color:Color )
       native @|Rogue_playdate->graphics->fillRect( $position.x, $position.y, $size.x, $size.y, $color.value );
 
+    method fill( bitmap:Bitmap )
+      native @|LCDColor color;
+              |Rogue_playdate->graphics->setColorToPattern( &color, $bitmap->bitmap, 1, 0 );
+      native @|Rogue_playdate->graphics->fillRect( $position.x, $position.y, $size.x, $size.y, color );
+
+    method fill( pattern:Pattern )
+      native @|Rogue_playdate->graphics->fillRect( $position.x, $position.y, $size.x, $size.y, ((LCDColor)&$pattern.pattern) );
+
 endAugment
 
 augment Circle

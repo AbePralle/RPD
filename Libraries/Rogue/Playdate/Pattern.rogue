@@ -7,7 +7,10 @@ class Pattern [compound]
   GLOBAL METHODS
     method create( text_image:String )->Pattern
       # Spaces are white, non-spaces are black
+
+      # First 8 bytes are pattern, second 8 bytes are mask (1=draw, 0=transparent)
       native @|LCDPattern pattern = {0};
+              |memset( pattern+8, 255, 8 );
 
       if (text_image.count == 64)
         forEach (ch at i in text_image)

@@ -12,6 +12,7 @@ class Bitmap
 
   METHODS
     method init( filepath )
+      filepath = "Images/" + filepath
       native @|const char* error = 0;
               |const char* filepath = $filepath->data->as_utf8;
               |$this->bitmap = Rogue_playdate->graphics->loadBitmap( filepath, &error );
@@ -26,16 +27,16 @@ class Bitmap
               |    (uint8_t**)&$this->data );
               |}
 
-    method draw( position:XY, flip=BitmapFlip.NONE:Int32 )
-      native @|if ($this->bitmap)
-              |{
-              |  Rogue_playdate->graphics->drawBitmap( $this->bitmap, $position.x, $position.y, $flip );
-              |}
-
     method on_cleanup
       native @|if ($this->bitmap)
               |{
               |  Rogue_playdate->graphics->freeBitmap( $this->bitmap );
               |  $this->bitmap = 0;
+              |}
+
+    method draw( position:XY, flip=BitmapFlip.NONE:Int32 )
+      native @|if ($this->bitmap)
+              |{
+              |  Rogue_playdate->graphics->drawBitmap( $this->bitmap, $position.x, $position.y, $flip );
               |}
 endClass
