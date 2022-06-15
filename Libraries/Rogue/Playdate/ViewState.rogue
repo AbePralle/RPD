@@ -25,8 +25,8 @@ class ViewState
     method canvas->Canvas
       return @view.canvas
 
-    method change_state( state:ViewState )
-      next_state = state
+    method change_state( view_state:ViewState )
+      next_state = view_state
       next_state.view = @view
       _exit_state = true
 
@@ -42,10 +42,10 @@ class ViewState
     method on_update
       noAction
 
-    method queue_state( state:ViewState )
+    method queue_state( view_state:ViewState )
       local cur = this
       while (cur.next_state) cur .= next_state
-      cur.next_state = state
+      cur.next_state = view_state
 
     method view->View
       return @view

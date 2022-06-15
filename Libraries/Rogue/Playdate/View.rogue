@@ -34,7 +34,7 @@ class View : UI
 
   PROPERTIES
     canvas         : Canvas
-    state          = ViewState().[ view=this ]
+    view_state     = ViewState().[ view=this ]
     last_update_ms : Int32
 
   METHODS
@@ -52,7 +52,7 @@ class View : UI
       View.current = this
 
     method change_state( new_state:ViewState )
-      state.change_state( new_state )
+      view_state.change_state( new_state )
 
     method default_font->UIFont
       return null
@@ -62,11 +62,11 @@ class View : UI
       if (dirty_bounds)
         temporarily clip = dirty_bounds
           dirty_bounds = null
-          state.on_draw
+          view_state.on_draw
           on_draw
           (forEach in layers).draw( clip.value )
           after_draw
-          state.after_draw
+          view_state.after_draw
         endTemporarily
       endIf
 
@@ -89,12 +89,12 @@ class View : UI
       if (n < 1 or n > 15) n = 1
       while (n >= 0.75)
         _advance_state
-        state.on_update
+        view_state.on_update
         on_update
         if (actions) actions .= update
         (forEach in layers).update
         after_update
-        state.after_update
+        view_state.after_update
         --n
       endWhile
       last_update_ms = cur_time_ms
@@ -102,11 +102,11 @@ class View : UI
       update_layout( bounds )
 
     method _advance_state
-      while (state._exit_state)
-        state._exit_state = false
-        state.on_exit
-        state = which{ state.next_state || ViewState() }
-        state.on_enter
+      while (view_state._exit_state)
+        view_state._exit_state = false
+        view_state.on_exit
+        view_state = which{ view_state.next_state || ViewState() }
+        view_state.on_enter
       endWhile
 
 endClass
