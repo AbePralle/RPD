@@ -15,6 +15,42 @@ class ControllerEvent : Event
 
     method init( buttons, is_press )
 
+    method is_press_a->Logical
+      return (not is_press and (buttons & Controls.A))
+
+    method is_press_b->Logical
+      return (not is_press and (buttons & Controls.B))
+
+    method is_press_down->Logical
+      return (not is_press and (buttons & Controls.DOWN))
+
+    method is_press_left->Logical
+      return (not is_press and (buttons & Controls.LEFT))
+
+    method is_press_right->Logical
+      return (not is_press and (buttons & Controls.RIGHT))
+
+    method is_press_up->Logical
+      return (not is_press and (buttons & Controls.UP))
+
+    method is_release_a->Logical
+      return (not is_press and (buttons & Controls.A))
+
+    method is_release_b->Logical
+      return (not is_press and (buttons & Controls.B))
+
+    method is_release_down->Logical
+      return (not is_press and (buttons & Controls.DOWN))
+
+    method is_release_left->Logical
+      return (not is_press and (buttons & Controls.LEFT))
+
+    method is_release_right->Logical
+      return (not is_press and (buttons & Controls.RIGHT))
+
+    method is_release_up->Logical
+      return (not is_press and (buttons & Controls.UP))
+
     method to->String
       local result = String()
       result.print( which{is_press:"press "||"release "} )
