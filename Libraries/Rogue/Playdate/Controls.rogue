@@ -15,11 +15,11 @@ class Controls [singleton]
 
   METHODS
     method dispatch( change:Int32, &is_press )
-      if (View.current)
+      if (Display.view)
         local event = ObjectPool<<ControllerEvent>>.on_use
         event.init( change, &=is_press )
         event.retain
-        if (View.current) View.current.handle( event )
+        Display.view.view_state.handle( event )
         event.release
       endIf
 

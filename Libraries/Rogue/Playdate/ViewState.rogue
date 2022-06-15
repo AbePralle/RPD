@@ -16,6 +16,9 @@ class ViewState
     method advance_state
       _exit_state = true
 
+    method after( e:ControllerEvent )
+      noAction
+
     method after_draw
       noAction
 
@@ -29,6 +32,18 @@ class ViewState
       next_state = view_state
       next_state.view = @view
       _exit_state = true
+
+    method handle( e:ControllerEvent )
+      on( e )
+      if (e.is_consumed) return
+
+      view.handle( e )
+      if (e.is_consumed) return
+
+      after( e )
+
+    method on( e:ControllerEvent )
+      noAction
 
     method on_enter
       noAction

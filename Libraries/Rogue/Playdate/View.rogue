@@ -1,37 +1,6 @@
 module Playdate
 
-#$include "Event.rogue"
-#$include "Keyboard.rogue"
-#$include "Pointer.rogue"
-
-#$include "UIAbsoluteLayout.rogue"
-#$include "UIAttributes.rogue"
-#$include "UIBorder.rogue"
-#$include "UIComponent.rogue"
-#$include "UIContent.rogue"
-#$include "UIFiller.rogue"
-#$include "UIFlowLayout.rogue"
-#$include "UIFont.rogue"
-#$include "UIHorizontalLayout.rogue"
-#$include "UILabel.rogue"
-#$include "UILayout.rogue"
-#$include "UIList.rogue"
-#$include "UIModifier.rogue"
-#$include "UIPlacement.rogue"
-#$include "UIScrollView.rogue"
-#$include "UIScrollViewController.rogue"
-#$include "UISpacer.rogue"
-#$include "UIStackLayout.rogue"
-#$include "UITableLayout.rogue"
-#$include "UIText.rogue"
-#$include "UITheme.rogue"
-#$include "UIVerticalLayout.rogue"
-#$include "UIWidget.rogue"
-
 class View : UI
-  GLOBAL PROPERTIES
-    current : View
-
   PROPERTIES
     canvas         : Canvas
     view_state     = ViewState().[ view=this ]
@@ -46,10 +15,6 @@ class View : UI
       bounds = Box( 0, 0, canvas.size )
       request_redraw
       prior.init
-
-    method activate
-      prior.activate
-      View.current = this
 
     method change_state( new_state:ViewState )
       view_state.change_state( new_state )
