@@ -6,18 +6,77 @@ class Pattern [compound]
 
   GLOBAL METHODS
     method create( text_image:String )->Pattern
-      # Spaces are white, non-spaces are black
+      # text_image
+      #   A 64-character string defining an 8x8 pattern. Spaces represent white,
+      #   periods are transparent, and other non-spaces are black.
+      #
+      # Example
+      #   hash = Pattern(
+      #     "       #"...
+      #     "      # "...
+      #     "     #  "...
+      #     "    #   "...
+      #     "   #    "...
+      #     "  #     "...
+      #     " #      "...
+      #     "#       "
+      #   )
 
-      # First 8 bytes are pattern, second 8 bytes are mask (1=draw, 0=transparent)
       native @|LCDPattern pattern = {0};
-              |memset( pattern+8, 255, 8 );
 
       if (text_image.count == 64)
         forEach (ch at i in text_image)
-          native @|pattern[$i>>3] <<= 1;
+          native @|pattern[$i>>3] <<= 1;      // color bit
+                  |pattern[8+($i>>3)] <<= 1;  // opacity bit
                   |if ($ch == ' ') pattern[$i>>3] |= 1;
+                  |if ($ch != '.') pattern[8+($i>>3)] |= 1;
         endForEach
       endIf
 
       return native("*(($<<Pattern>>*)&pattern)")->Pattern
+
+    method create( bg:Character, fg:Character, density:Real )->Pattern
+      # fg, bg
+      #   ' ' - white
+      #   '.' - transparent
+      #   '#' - black (or any other character besides ' ' and '.')
+      #
+      # density
+      #   A 'fg' density between 0.0 and 1.0. "0.75" directs that 75% of the
+      #   resulting pattern is 'fg' and 25% is 'bg'.
+      return create( bg, fg, (density * 64)->Int32 )
+
+    method create( bg:Character, fg:Character, density:Int32 )->Pattern
+      # fg, bg
+      #   ' ' - white
+      #   '.' - transparent
+      #   '#' - black (or any other character besides ' ' and '.')
+      #
+      # density
+      #   A 'fg' density between 0 and 64. "16" directs that 75% of the
+      #   resulting pattern is 'fg' and 25% is 'bg'.
+      use def = StringPool
+        def.reserve( 64 )
+        loop (64) def.print ' '
+        _fill( def.data, bg, fg, density, 0, 0, 8 )
+        return Pattern( def )
+      endUse
+
+    method _fill( data:Byte[], bg:Character, fg:Character, density:Int32, x:Int32, y:Int32, size:Int32 )
+      if (size == 1)
+        data[y*8+x] = which{ density:fg || bg }
+      else
+        local right = density / 2
+        local left  = density - right
+        local bl = left / 2
+        local tl = left - bl
+        local tr = right / 2
+        local br = right - tr
+        local half_size = size / 2
+        _fill( data, bg, fg, tl, x, y, half_size )
+        _fill( data, bg, fg, tr, x+half_size, y, half_size )
+        _fill( data, bg, fg, bl, x, y+half_size, half_size )
+        _fill( data, bg, fg, br, x+half_size, y+half_size, half_size )
+      endIf
 endClass
+
