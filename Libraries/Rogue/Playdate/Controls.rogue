@@ -1,0 +1,36 @@
+module Playdate
+
+class Controls [singleton]
+  DEFINITIONS
+    NONE  = 0
+    LEFT  = native("(RogueInt32)kButtonLeft")->Int32
+    RIGHT = native("(RogueInt32)kButtonRight")->Int32
+    UP    = native("(RogueInt32)kButtonUp")->Int32
+    DOWN  = native("(RogueInt32)kButtonDown")->Int32
+    B     = native("(RogueInt32)kButtonB")->Int32
+    A     = native("(RogueInt32)kButtonA")->Int32
+
+  PROPERTIES
+    state : Int32
+
+  METHODS
+    method dispatch( change:Int32, &is_press )
+      if (View.current)
+        local event = ObjectPool<<ControllerEvent>>.on_use
+        event.init( change, &=is_press )
+        event.retain
+        if (View.current) View.current.handle( event )
+        event.release
+      endIf
+
+    method update
+      local pushed, released : Int32
+      native @|PDButtons current, pushed, released;
+              |Rogue_playdate->system->getButtonState( &current, &pushed, &released );
+              |$state = current;
+              |$pushed = pushed;
+              |$released = released;
+
+      if (pushed)   dispatch( pushed, &is_press )
+      if (released) dispatch( released, &!is_press )
+endClass

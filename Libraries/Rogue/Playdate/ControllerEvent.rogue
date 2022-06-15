@@ -1,0 +1,81 @@
+module Playdate
+
+class ControllerEvent : Event
+  PROPERTIES
+    buttons : Int32
+    is_press : Logical
+
+  METHODS
+    method init
+
+    method init( existing:ControllerEvent )
+      prior.init( existing )
+      buttons   = existing.buttons
+      is_press = existing.is_press
+
+    method init( buttons, is_press )
+
+    method to->String
+      local result = String()
+      result.print( which{is_press:"press "||"release "} )
+      local separator = ""
+      if (buttons & Controls.UP)    result.[ print(separator), print("UP") ]; separator="|"
+      if (buttons & Controls.LEFT)  result.[ print(separator), print("LEFT") ]; separator="|"
+      if (buttons & Controls.DOWN)  result.[ print(separator), print("DOWN") ]; separator="|"
+      if (buttons & Controls.RIGHT) result.[ print(separator), print("RIGHT") ]; separator="|"
+      if (buttons & Controls.A)     result.[ print(separator), print("A") ]; separator="|"
+      if (buttons & Controls.B)     result.[ print(separator), print("B") ]; separator="|"
+      return result
+endClass
+
+augment UI::UI
+  METHODS
+    method after( e:Playdate::ControllerEvent )
+      noAction
+
+    method handle( e:Playdate::ControllerEvent )
+      activate
+
+      on( e )
+      if (e.is_consumed) return
+
+      forEach (layer in layers)
+        layer.handle( e )
+        if (e.is_consumed) return
+      endForEach
+
+      after( e )
+
+    method on( e:Playdate::ControllerEvent )
+      noAction
+
+endAugment
+
+augment UI::UIComponent
+  METHODS
+    method after( e:Playdate::ControllerEvent )
+      noAction
+
+    method dispatch( e:Playdate::ControllerEvent )
+      # Send input events to children in reverse order because the top layer comes last
+      if (next) next.dispatch( e )
+      if (e.is_consumed) return
+      handle( e )
+
+    method handle( e:Playdate::ControllerEvent )
+      if (is_hidden or is_input_disabled) return
+
+      on( e )
+      if (e.is_consumed) return
+
+      if (first_child)
+        first_child.dispatch( e )
+        if (e.is_consumed) return
+      endIf
+
+      after( e )
+
+    method on( e:Playdate::ControllerEvent )
+      noAction
+
+endAugment

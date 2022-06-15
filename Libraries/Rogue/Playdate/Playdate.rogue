@@ -1,14 +1,18 @@
 # Playdate.rogue
 module Playdate
+uses Events
 uses Geometry [export]
 uses UI [export]
+uses Utility/Action
+uses Utility/WorkList
 
 $include Playdate/Bitmap
 $include Playdate/BitmapFlip
 $include Playdate/Canvas
 $include Playdate/Color
+$include Playdate/ControllerEvent
+$include Playdate/Controls
 $include Playdate/Display
-$include Playdate/Events
 $include Playdate/Font
 $include Playdate/File
 $include Playdate/Geometry
@@ -24,6 +28,7 @@ $include Playdate/View
 class Playdate
   GLOBAL METHODS
     method render
+      Controls.update
       Display.render
 endClass
 
