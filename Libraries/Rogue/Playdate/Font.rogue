@@ -8,9 +8,6 @@ class Font : UIFont
     native "LCDFont* font;"
 
   METHODS
-    method init( name:String )
-      init( File(name.with_prefix("/System/Fonts/").with_suffix(".pft")) )
-
     method init( file:File, name=null )
       filepath = file.filepath
       if (not name) name = File(filepath).filename

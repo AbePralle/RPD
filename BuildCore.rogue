@@ -91,6 +91,7 @@ routine build( &simulator, &show )
   File.create_folder( build_folder )
   File.create_folder( build_folder/"Source" )
   File.sync_from( Files("Source/**.c"), build_folder/"Source" )
+  File.sync_from( Files("Assets/Fonts/**"), build_folder/"Source/Fonts", &verbose )
   File.sync_from( Files("Assets/Images/**"), build_folder/"Source/Images", &verbose )
 
   if (File.exists("Source/Main.rogue"))
