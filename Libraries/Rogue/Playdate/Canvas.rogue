@@ -6,7 +6,6 @@ class Canvas
 
   PROPERTIES
     clip          : Box?
-    view          : View
     width, height : Int32
 
   METHODS
@@ -31,10 +30,6 @@ class Canvas
       clip = null
       temporarily Canvas.current = this
         on_draw
-        if (view)
-          view.update
-          view.draw
-        endIf
         after_draw
       endTemporarily
 

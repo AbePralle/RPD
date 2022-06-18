@@ -2,17 +2,13 @@ module Playdate
 
 class View : UI
   PROPERTIES
-    canvas         : Canvas
     view_state     = ViewState().[ view=this ]
     last_update_ms : Int32
 
   METHODS
     method init
-      init( Display )
-
-    method init( canvas )
-      canvas.view = this
-      bounds = Box( 0, 0, canvas.size )
+      Display.view = this
+      bounds = Box( 0, 0, Display.size )
       request_redraw
       prior.init
 
@@ -36,7 +32,7 @@ class View : UI
       endIf
 
     method request_redraw
-      dirty_bounds = Box(canvas.size)
+      dirty_bounds = Box(bounds.size)
 
     method request_redraw( bounds:Box? )
       dirty_bounds |= bounds

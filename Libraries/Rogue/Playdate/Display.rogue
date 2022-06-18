@@ -3,6 +3,7 @@ module Playdate
 class Display : Canvas [singleton]
   PROPERTIES
     refresh_rate = 30
+    view         : View
 
   METHODS
     method init
@@ -23,10 +24,19 @@ class Display : Canvas [singleton]
 
     method render
       if (not view)
-        println "WARNING: No view has been setup for the display. Create an extended View and be sure to call prior.init if you override init()."
+        println "WARNING: No view has been set up for the display. Create an extended View and be sure to call prior.init if you override init()."
         view = View()  # dummy
       endIf
-      prior.render
+
+      clip = null
+      temporarily Canvas.current = this
+        on_draw
+        if (view)
+          view.update
+          view.draw
+        endIf
+        after_draw
+      endTemporarily
 
     method set_clip( new_clip:Box? )
       @clip = new_clip

@@ -39,7 +39,7 @@ int dy = 2;
 static int update( void* playdate_api )
 {
   PlaydateRoutine__render__RogueInt64( (RogueInt64)playdate_api );
-  Rogue_collect_garbage();  // executes GC if new allocation threshold has been reached
+  Rogue_check_gc();  // executes GC if new allocation threshold has been reached
 
 	return 1;
 }
