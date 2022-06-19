@@ -27,7 +27,6 @@ class ViewState
 
     method change_state( view_state:ViewState )
       next_state = view_state
-      next_state.view = @view
       _exit_state = true
 
     method handle( e:ControllerEvent )
@@ -53,6 +52,10 @@ class ViewState
 
     method on_update
       noAction
+
+    method operator+( next_state:ViewState )->ViewState
+      queue_state( next_state )
+      return this
 
     method queue_state( view_state:ViewState )
       local cur = this

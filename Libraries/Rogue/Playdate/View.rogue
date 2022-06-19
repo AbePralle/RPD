@@ -67,6 +67,7 @@ class View : UI
         view_state._exit_state = false
         view_state.on_exit
         view_state = which{ view_state.next_state || ViewState() }
+        view_state.view = this
         view_state.on_enter
       endWhile
 
