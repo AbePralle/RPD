@@ -7,10 +7,11 @@ class Pattern [compound]
   GLOBAL METHODS
     method create( text_image:String )->Pattern
       # text_image
-      #   A 64-character string defining an 8x8 pattern. Spaces represent white,
-      #   periods are transparent, and other non-spaces are black.
+      #   A 64-character string (with optional newlines) defining an 8x8 pattern.
+      #   Spaces represent white, periods are transparent, and other non-spaces are black.
       #
-      # Example
+      # Examples
+      #
       #   hash = Pattern(
       #     "       #"...
       #     "      # "...
@@ -21,17 +22,43 @@ class Pattern [compound]
       #     " #      "...
       #     "#       "
       #   )
+      #
+      #   hash = Pattern(
+      #     @|       #
+      #      |      #
+      #      |     #
+      #      |    #
+      #      |   #
+      #      |  #
+      #      | #
+      #      |#
+      #   )
 
       native @|LCDPattern pattern = {0};
 
-      if (text_image.count == 64)
-        forEach (ch at i in text_image)
-          native @|pattern[$i>>3] <<= 1;      // color bit
-                  |pattern[8+($i>>3)] <<= 1;  // opacity bit
-                  |if ($ch == ' ') pattern[$i>>3] |= 1;
-                  |if ($ch != '.') pattern[8+($i>>3)] |= 1;
+      use filtered_text = StringPool
+        local n = 0
+        forEach (ch in text_image)
+          if (ch >= ' ' and ch <= 126)
+            filtered_text.print( ch )
+            ++n
+          elseIf (ch == '\n')
+            while (n < 8) ++n; filtered_text.print(' ')
+            n = 0
+          endIf
         endForEach
-      endIf
+
+        loop (64 - filtered_text.count) filtered_text.print(' ')
+
+        if (filtered_text.count == 64)
+          forEach (ch at i in filtered_text)
+            native @|pattern[$i>>3] <<= 1;      // color bit
+                    |pattern[8+($i>>3)] <<= 1;  // opacity bit
+                    |if ($ch == ' ') pattern[$i>>3] |= 1;
+                    |if ($ch != '.') pattern[8+($i>>3)] |= 1;
+          endForEach
+        endIf
+      endUse
 
       return native("*(($<<Pattern>>*)&pattern)")->Pattern
 
