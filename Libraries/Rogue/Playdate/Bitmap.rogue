@@ -2,41 +2,48 @@ module Playdate
 
 class Bitmap
   PROPERTIES
-    filepath      : String
-    width         : Int32
-    height        : Int32
-    bytes_per_row : Int32
-    has_mask      : Logical
-    native "LCDBitmap* bitmap;"
-    native "RogueByte* data;"
+    filepath           : String
+    width              : Int32
+    height             : Int32
+    mode=DrawMode.COPY : Int32
+    native "LCDBitmap* lcd_bitmap;"
 
   METHODS
     method init( filepath )
       filepath = "Images/" + filepath
       native @|const char* error = 0;
               |const char* filepath = $filepath->data->as_utf8;
-              |$this->bitmap = Rogue_playdate->graphics->loadBitmap( filepath, &error );
+              |$this->lcd_bitmap = Rogue_playdate->graphics->loadBitmap( filepath, &error );
               |if (error)
               |{
               |  Rogue_playdate->system->logToConsole( "Error loading image '%s': %s", filepath, error );
               |}
               |else
               |{
-              |  int w, h, bytes_per_row, has_mask;
-              |  Rogue_playdate->graphics->getBitmapData( $this->bitmap, &w, &h, &bytes_per_row, &has_mask,
-              |    (uint8_t**)&$this->data );
-              |}
+                 update_info
+      native @|}
+
+    method init( size:XY, color=Color.CLEAR:Color )
+      native @|$this->lcd_bitmap = Rogue_playdate->graphics->newBitmap( $size.x, $size.y, (LCDColor)$color.value );
+      update_info
 
     method on_cleanup
-      native @|if ($this->bitmap)
+      native @|if ($this->lcd_bitmap)
               |{
-              |  Rogue_playdate->graphics->freeBitmap( $this->bitmap );
-              |  $this->bitmap = 0;
+              |  Rogue_playdate->graphics->freeBitmap( $this->lcd_bitmap );
+              |  $this->lcd_bitmap = 0;
               |}
 
     method draw( position:XY, flip=BitmapFlip.NONE:Int32 )
-      native @|if ($this->bitmap)
+      native @|if ($this->lcd_bitmap)
               |{
-              |  Rogue_playdate->graphics->drawBitmap( $this->bitmap, $position.x, $position.y, $flip );
+              |  Rogue_playdate->graphics->setDrawMode( (LCDBitmapDrawMode)$mode );
+              |  Rogue_playdate->graphics->drawBitmap( $this->lcd_bitmap, $position.x, $position.y, $flip );
               |}
+
+    method update_info
+      native @|  int w, h;
+              |  Rogue_playdate->graphics->getBitmapData( $this->lcd_bitmap, &w, &h, 0, 0, 0 );
+              |  $width = w;
+              |  $height = h;
 endClass

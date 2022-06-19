@@ -13,6 +13,7 @@ $include Playdate/Color
 $include Playdate/ControllerEvent
 $include Playdate/Controls
 $include Playdate/Display
+$include Playdate/DrawMode
 $include Playdate/Font
 $include Playdate/File
 $include Playdate/Geometry

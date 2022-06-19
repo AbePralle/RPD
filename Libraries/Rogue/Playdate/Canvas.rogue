@@ -7,15 +7,27 @@ class Canvas
   PROPERTIES
     clip          : Box?
     width, height : Int32
+    bitmap        : Bitmap
+    prior_canvas  : Canvas
 
   METHODS
-    method init( width, height )
+    method init( size:XY, color=Color.CLEAR:Color )
+      width = size.x
+      height = size.y
+      bitmap = Bitmap( size, color )
+
+    method init( bitmap )
+      width  = bitmap.width
+      height = bitmap.height
 
     method after_draw
       noAction
 
     method at( u:Real, v:Real )->XY
       return XY( (width*u).floor, (height*v).floor )
+
+    method bounds->Box
+      return Box(width,height)
 
     method center->XY
       return XY( width/2, height/2 )
@@ -26,15 +38,25 @@ class Canvas
     method clear( pattern:Pattern )
       #native @|Rogue_playdate->graphics->clear( (LCDColor)&$pattern );
 
-    method render
-      clip = null
-      temporarily Canvas.current = this
-        on_draw
-        after_draw
-      endTemporarily
-
     method on_draw
       noAction
+
+    method render
+      use this
+        on_draw
+        after_draw
+      endUse
+
+    method on_use->this
+      prior_canvas = Canvas.current
+      Canvas.current = this
+      clip = null
+      native @|Rogue_playdate->graphics->pushContext( $bitmap->lcd_bitmap );
+      return this
+
+    method on_end_use( this_canvas:Canvas )
+      native @|Rogue_playdate->graphics->popContext();
+      Canvas.current = prior_canvas
 
     method set_clip( new_clip:Box? )
       #{

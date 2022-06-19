@@ -1,0 +1,13 @@
+module Playdate
+
+class DrawMode
+  DEFINITIONS
+    COPY = native("kDrawModeCopy")->Int32
+    WHITE_TRANSPARENT = native("kDrawModeWhiteTransparent")->Int32
+    BLACK_TRANSPARENT = native("kDrawModeBlackTransparent")->Int32
+    FILL_WHITE        = native("kDrawModeFillWhite")->Int32
+    FILL_BLACK        = native("kDrawModeFillBlack")->Int32
+    XOR               = native("kDrawModeXOR")->Int32
+    NXOR              = native("kDrawModeNXOR")->Int32
+    INVERTED          = native("kDrawModeInverted")->Int32
+endClass
