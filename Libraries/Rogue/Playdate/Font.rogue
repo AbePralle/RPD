@@ -61,7 +61,7 @@ class Font : UIFont
       native @|if ($this->font)
               |{
               |  $w = Rogue_playdate->graphics->getTextWidth( $this->font, $text->data->as_utf8+$byte_offset,
-              |       (byte_limit - byte_offset), kUTF8Encoding, $tracking );
+              |       ($byte_limit - $byte_offset), kUTF8Encoding, $tracking );
               |  $h = Rogue_playdate->graphics->getFontHeight( $this->font );
               |}
       return XY(w,h)
