@@ -7,10 +7,29 @@ augment Rogue::Global
 endAugment
 
 class Log : BufferedPrintWriter [singleton]
+  PROPERTIES
+    filepath = PROJECT_HOME / "Build/Simulator/Log.txt"
+
   METHODS
+    method init
+      if ($target("Simulator"))
+        native @|FILE* fp = fopen( $filepath->data->as_utf8, "w" );
+                |fflush( fp );
+                |fclose( fp );
+      endIf
+
     method flush( buffer:String )
       if (buffer.ends_with('\n')) buffer.remove_last
+
       native @|Rogue_playdate->system->logToConsole( "%s", $buffer->data->as_utf8 );
+
+      if ($target("Simulator"))
+        native @|FILE* fp = fopen( $filepath->data->as_utf8, "a" );
+                |fprintf( fp, "%s\n", $buffer->data->as_utf8 );
+                |fflush( fp );
+                |fclose( fp );
+      endIf
+
       buffer.clear
 endClass
 

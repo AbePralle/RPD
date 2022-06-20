@@ -57,6 +57,14 @@ routine rogo_run
   # Run the previous build on the Playdate simulator.
   configure
   run( "Simulator" )
+  println "# 'rogo log' displays a copy of the console log."
+endRoutine
+
+routine rogo_log
+  local file = File( "Build/Simulator/Log.txt" )
+  if (file.exists)
+    println file.load_as_string
+  endIf
 endRoutine
 
 routine rogo_details
@@ -108,6 +116,8 @@ routine build( &simulator, &show )
     cmd      += '' --libraries="$/Source/Libraries;Libraries/RPD/Libraries/Rogue"''(File.esc(r2_folder))
     cmd      +=  " --gc=manual"
     cmd      +=  " --real=32"
+    cmd      +=  " --target=C,Playdate,$"(target)
+    cmd      += '' --define='PROJECT_HOME:"$"\'''(File.abs("."))
     execute cmd
   endIf
 
