@@ -34,12 +34,18 @@ class Bitmap
               |  $this->lcd_bitmap = 0;
               |}
 
+    method bounds->Box
+      return Box( size )
+
     method draw( position:XY, flip=BitmapFlip.NONE:Int32 )
       native @|if ($this->lcd_bitmap)
               |{
               |  Rogue_playdate->graphics->setDrawMode( (LCDBitmapDrawMode)$mode );
               |  Rogue_playdate->graphics->drawBitmap( $this->lcd_bitmap, $position.x, $position.y, $flip );
               |}
+
+    method size->XY
+      return XY(width,height)
 
     method update_info
       native @|  int w, h;
