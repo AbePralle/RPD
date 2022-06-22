@@ -1,0 +1,29 @@
+module Playdate
+
+class UIImage : UIComponent
+  PROPERTIES
+    image  : Bitmap
+    offset : XY
+
+  METHODS
+    method init( image )
+      fixed_size = image.size
+
+    method init( file:File )
+      init( Bitmap(file) )
+
+    method on_draw
+      localize display_position
+      if (offset.is_zero)
+        image.draw( display_position )
+      else
+        local size = image.size
+        local tl = display_position + offset
+        if (offset.x >= 0) tl -= size.xv
+        if (offset.y >= 0) tl -= size.yv
+        image.draw( tl )
+        image.draw( tl + size.xv )
+        image.draw( tl + size.yv )
+        image.draw( tl + size )
+      endIf
+endClass

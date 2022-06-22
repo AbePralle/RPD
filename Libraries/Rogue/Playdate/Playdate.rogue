@@ -23,6 +23,7 @@ $include Playdate/LineCapStyle
 $include Playdate/Pattern
 $include Playdate/PlaydateGraphics
 $include Playdate/System
+$include Playdate/PlaydateUI
 $include Playdate/ViewState
 $include Playdate/View
 
