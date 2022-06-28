@@ -21,6 +21,8 @@ class View : UI
     method draw
       activate
 
+      if (needs_redraw) request_redraw
+
       if (dirty_bounds)
         temporarily clip = dirty_bounds
           dirty_bounds = null
