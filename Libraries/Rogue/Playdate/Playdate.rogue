@@ -1,5 +1,6 @@
 # Playdate.rogue
 module Playdate
+uses Entities [export]
 uses Events
 uses Geometry [export]
 uses UI [export]

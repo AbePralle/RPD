@@ -20,6 +20,7 @@ class View : UI
 
     method draw
       activate
+
       if (dirty_bounds)
         temporarily clip = dirty_bounds
           dirty_bounds = null
@@ -52,6 +53,7 @@ class View : UI
         _advance_state
         view_state.on_update
         on_update
+        entities?.update
         if (actions) actions .= update
         (forEach in layers).update
         after_update
