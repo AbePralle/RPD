@@ -55,9 +55,14 @@ class View : UI
         _advance_state
         view_state.on_update
         on_update
-        entities?.update
         if (actions) actions .= update
+
         (forEach in layers).update
+
+        forEach (layer in layers step -1)
+          if (layer.discard( $.is_dead ) is null) layers.remove( layer )
+        endForEach
+
         after_update
         view_state.after_update
         --n
