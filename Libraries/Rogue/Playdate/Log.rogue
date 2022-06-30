@@ -14,8 +14,11 @@ class Log : BufferedPrintWriter [singleton]
     method init
       if ($target("Simulator"))
         native @|FILE* fp = fopen( $filepath->data->as_utf8, "w" );
-                |fflush( fp );
-                |fclose( fp );
+                |if (fp)
+                |{
+                |  fflush( fp );
+                |  fclose( fp );
+                |}
       endIf
 
     method flush( buffer:String )
@@ -25,9 +28,12 @@ class Log : BufferedPrintWriter [singleton]
 
       if ($target("Simulator"))
         native @|FILE* fp = fopen( $filepath->data->as_utf8, "a" );
-                |fprintf( fp, "%s\n", $buffer->data->as_utf8 );
-                |fflush( fp );
-                |fclose( fp );
+                |if (fp)
+                |{
+                |  fprintf( fp, "%s\n", $buffer->data->as_utf8 );
+                |  fflush( fp );
+                |  fclose( fp );
+                |}
       endIf
 
       buffer.clear
