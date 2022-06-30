@@ -29,6 +29,7 @@ class View : UI
           view_state.on_draw
           on_draw
           (forEach in layers).draw( clip.value )
+          (forEach in layers).apply( (component) => component.is_dirty=false )
           after_draw
           view_state.after_draw
         endTemporarily
