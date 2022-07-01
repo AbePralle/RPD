@@ -114,6 +114,7 @@ routine build( &simulator, &show )
     cmd      +=  " Standard StandardIO"
     cmd      +=  " --output=$/Source/RogueProgram"(build_folder)
     cmd      += '' --libraries="$/Source/Libraries;Libraries/RPD/Libraries/Rogue"''(File.esc(r2_folder))
+    cmd      +=  " --debug"
     cmd      +=  " --gc=manual"
     cmd      +=  " --real=32"
     cmd      +=  " --target=C,Playdate,$"(target)
