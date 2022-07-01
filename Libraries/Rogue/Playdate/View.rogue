@@ -2,13 +2,26 @@ module Playdate
 
 class View : UI
   PROPERTIES
-    view_state     = ViewState().[ view=this ]
-    last_update_ms : Int32
+    view_state       = ViewState().[ view=this ]
+    last_update_ms   : Int32
+    dirty_grid       = Logical[]
+    dirty_grid_w     : Int32
+    dirty_grid_wp2   : Int32
+    dirty_grid_h     : Int32
+    dirty_grid_shift : Int32
+    is_dirty         : Logical
+    redraw_callback  = (this => request_redraw(Box)) : Function(Box)
 
   METHODS
     method init
       Display.view = this
       bounds = Box( 0, 0, Display.size )
+      dirty_grid_w   = (Display.size.x + 31) / 32
+      dirty_grid_wp2 = dirty_grid_w.to_power_of_2
+      dirty_grid_h   = (Display.size.y + 31) / 32
+      dirty_grid_shift = 0
+      while ((1:<<:dirty_grid_shift) < dirty_grid_w) ++dirty_grid_shift
+      dirty_grid.dim( dirty_grid_wp2 * dirty_grid_h )
       request_redraw
       prior.init
 
@@ -21,25 +34,81 @@ class View : UI
     method draw
       activate
 
-      if (needs_redraw) request_redraw
+      if (needs_redraw(redraw_callback) or is_dirty)
+        local dirty_bounds = next_dirty_bounds
+        while (dirty_bounds)
+          temporarily clip = dirty_bounds.value
+            view_state.on_draw
+            on_draw
+            (forEach in layers).draw( clip.value )
+            after_draw
+            view_state.after_draw
+          endTemporarily
 
-      if (dirty_bounds)
-        temporarily clip = dirty_bounds
-          dirty_bounds = null
-          view_state.on_draw
-          on_draw
-          (forEach in layers).draw( clip.value )
-          (forEach in layers).apply( (component) => component.is_dirty=false )
-          after_draw
-          view_state.after_draw
-        endTemporarily
+          dirty_bounds = next_dirty_bounds
+        endWhile
+
+        (forEach in layers).apply( $.save_display_state )
+
+        is_dirty = false
+        dirty_grid.fill( false )
       endIf
 
-    method request_redraw
-      dirty_bounds = Box(bounds.size)
+    method next_dirty_bounds->Box?
+      forEach (j in 0..<dirty_grid_h)
+        forEach (i in 0..<dirty_grid_w)
+          local index = (j:<<:dirty_grid_shift) | i
+          if (dirty_grid[index])
+            # (i,j) is our top-left corner
+            dirty_grid[index] = false
+            local i_limit = i+1
+            while (i_limit < dirty_grid_w and dirty_grid[index+1])
+              ++i_limit
+              ++index
+              dirty_grid[index] = false
+            endWhile
+            local j_limit = j+1
+            while (row_is_dirty(j_limit,i,i_limit)) ++j_limit
+            return Box( XY(i:<<:5,j:<<:5), XY((i_limit-i):<<:5,(j_limit-j):<<:5) )
+          endIf
+        endForEach
+      endForEach
+      return null
 
-    method request_redraw( bounds:Box? )
-      dirty_bounds |= bounds
+    method request_redraw
+      is_dirty = true
+      dirty_grid.fill( true )
+
+    method request_redraw( bounds:Box )
+      local i1 = (bounds.position.x :>>>: 5).clamped_low(0)
+      local i2 = ((bounds.position.x + (bounds.size.x-1)) :>>>: 5).clamped_high( dirty_grid_w - 1 )
+      local j1 = (bounds.position.y :>>>: 5).clamped_low(0)
+      local j2 = ((bounds.position.y + (bounds.size.y-1)) :>>>: 5).clamped_high( dirty_grid_h - 1 )
+      if (i1 > i2 or j1 > j2) return
+
+      is_dirty = true
+      forEach (j in j1..j2)
+        forEach (i in i1..i2)
+          dirty_grid[(j:<<:dirty_grid_shift)|i] = true
+        endForEach
+      endForEach
+
+    method row_is_dirty( j:Int32, i:Int32, i_limit:Int32 )->Logical
+      if (j >= dirty_grid_h) return false
+
+      local index = (j:<<:dirty_grid_shift) | i
+      loop (i_limit - i)
+        if (not dirty_grid[index]) return false
+        ++index
+      endLoop
+
+      index = (j:<<:dirty_grid_shift) | i
+      loop (i_limit - i) dirty_grid[index] = false; ++index
+
+      return true
+
+    method set_clip( @clip )
+      Display.clip = clip
 
     method update( bounds:Box )
       activate
@@ -61,7 +130,7 @@ class View : UI
         (forEach in layers).update
 
         forEach (layer in layers step -1)
-          if (layer.discard( $.is_dead ) is null) layers.remove( layer )
+          if (layer.discard_dead is null) layers.remove( layer )
         endForEach
 
         after_update
