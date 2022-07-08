@@ -30,7 +30,7 @@ UINCDIR =
 UASRC =
 
 # List all user C define here, like -D_DEBUG=1
-UDEFS =
+UDEFS = -DROGUE_PLATFORM_PLAYDATE=1 -DROGUE_PLATFORM_EMBEDDED=1
 
 # Define ASM defines here
 UADEFS =

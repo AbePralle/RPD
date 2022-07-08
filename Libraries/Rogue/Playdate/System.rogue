@@ -3,4 +3,16 @@ augment System
     method elapsed_ms->Int32
       # Execution time in milliseconds.
       return native( "Rogue_playdate->system->getCurrentTimeMilliseconds()" )->Int32
+
+    method exit( result_code=0:Int32 )
+      noAction
+
+    method time_ms->Int64
+      local result : Int64
+      native...
+      @|unsigned int ms;
+       |$result = Rogue_playdate->system->getSecondsSinceEpoch( &ms );
+       |$result = ($result * 1000) + (int)ms;
+       |$result += 946684768; // Adjust to be ms since 1970 instead of 2000.
+      return result
 endAugment

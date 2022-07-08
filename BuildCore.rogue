@@ -20,6 +20,13 @@ routine rogo_sim
   rogo_run
 endRoutine
 
+routine rogo_release
+  # Build a simulator + device release bundle and run on the Playdate simulator.
+  configure
+  build( &simulator, &device )
+  rogo_run
+endRoutine
+
 routine rogo_clean
   # Delete all intermediate and output files.
   configure
@@ -28,9 +35,9 @@ routine rogo_clean
 endRoutine
 
 routine rogo_device
-  # Build for Playdate hardware and show the compiled "Device" file.
+  # Build for Playdate hardware.
   configure
-  build( &!simulator, &show )
+  build( &device )
 endRoutine
 
 routine rogo_build
@@ -39,24 +46,28 @@ routine rogo_build
   build( &simulator )
 endRoutine
 
-routine rogo_build_simulator
+routine rogo_build_sim
   # Build for the Playdate simulator.
   configure
   build( &simulator )
 endRoutine
 
-description( "build device", "Build a \"Device\" file targeting Playdate hardware." )
-
 routine rogo_build_device
   # Build a "Device" file targeting Playdate hardware.
   configure
-  build( &!simulator )
+  build( &device )
+endRoutine
+
+routine rogo_build_release
+  # Build a PDX bundle containing simulator and device builds.
+  configure
+  build( &simulator, &device )
 endRoutine
 
 routine rogo_run
   # Run the previous build on the Playdate simulator.
   configure
-  run( "Simulator" )
+  launch_simulator
   println "# 'rogo log' displays a copy of the console log."
 endRoutine
 
@@ -93,10 +104,8 @@ routine rogo_details
   settings.save( "Settings.json" )
 endRoutine
 
-routine build( &simulator, &show )
-  local target = which{ simulator:"Simulator" || "Device" }
-  local build_folder = "Build/$"(target)
-  File.create_folder( build_folder )
+routine build( &simulator, &device )
+  local build_folder = "Build"
   File.create_folder( build_folder/"Source" )
   File.sync_from( Files("Source/**.c"), build_folder/"Source" )
   File.sync_from( Files("Assets/Fonts/**"), build_folder/"Source/Fonts", &verbose )
@@ -105,19 +114,18 @@ routine build( &simulator, &show )
   if (File.exists("Source/Main.rogue"))
     local r2_filepath = System.find_program("r2")
     if (not String.exists(r2_filepath))
-      error "The R2 (Rogue v2) compiler is not installed."
+      error "The R2 (Rogue 2) compiler is not installed."
     endIf
     local r2_folder = Process.run( "readlink -f $"(File.esc(r2_filepath)), &env )->String.trimmed
     assert String.exists(r2_folder)
     r2_folder = File.folder( File.folder(r2_folder) )
     local cmd =  "r2 Source/Main.rogue"
-    cmd      +=  " Standard StandardIO"
     cmd      +=  " --output=$/Source/RogueProgram"(build_folder)
     cmd      += '' --libraries="$/Source/Libraries;Libraries/RPD/Libraries/Rogue"''(File.esc(r2_folder))
-    cmd      +=  " --debug"
+    if (not device) cmd += " --debug"
     cmd      +=  " --gc=manual"
     cmd      +=  " --real=32"
-    cmd      +=  " --target=C,Playdate,$"(target)
+    cmd      +=  " --target=C,Playdate"
     cmd      += '' --define='PROJECT_HOME:"$"\'''(File.abs("."))
     execute cmd
   endIf
@@ -129,11 +137,6 @@ routine build( &simulator, &show )
 
   local settings = JSON.load(File("Settings.json"))
   local details  = settings//details
-
-  local cmake_lists = String(File("Project/CMakeLists.txt"))
-  cmake_lists .= replacing( "$(FILENAME)", details//filename->String )
-  cmake_lists .= replacing( "$(C_FILES)", listing.join(' ') )
-  File.save( build_folder/"CMakeLists.txt", cmake_lists )
 
   local makefile = String(File("Project/Makefile"))
   makefile .= replacing( "$(FILENAME)", details//filename->String )
@@ -148,21 +151,9 @@ routine build( &simulator, &show )
   pdxinfo .= replacing( "$(IMAGE_PATH)" , details//image_path->String )
   File.save( build_folder/"Source/pdxinfo", pdxinfo )
 
-  if (simulator)
-    execute "cd $ && cmake . && make"(build_folder)
-  else
-    local local_settings = JSON.load_table("LocalSettings.json")
-    local path = local_settings//playdate_sdk->String/"C_API/buildsupport/arm.cmake"
-    execute "cd $ && cmake -DCMAKE_TOOLCHAIN_FILE=$ . && make"(build_folder,File.esc(path))
-    local output_path = Process.run("pwd",&env)->String.trimmed/"Build/Device"
-    output_path /= "$-Device"(details//filename->String)
-    if (File.exists(output_path))
-      infobox( "OUTPUT FILE\n"+output_path, &no_sides )
-      if (show)
-        Process.run( "open -R $"(File.esc(output_path)) )
-      endIf
-    endIf
-  endIf
+  if (simulator and device) execute "cd $ && make"(build_folder)
+  elseIf (simulator)        execute "cd $ && make pdc"(build_folder)
+  elseIf (device)           execute "cd $ && make device"(build_folder)
 endRoutine
 
 routine find_playdate_sdk->String
@@ -176,15 +167,15 @@ routine find_playdate_sdk->String
   return null
 endRoutine
 
-routine run( target:String )
+routine launch_simulator
   local settings = JSON.load(File("Settings.json"))
   local app = "/Users/abe/Developer/PlaydateSDK/bin/Playdate Simulator.app"
-  execute "open $ -- Build/$/$.pdx" (File.esc(app),target,settings//details//filename)
+  execute "open $ -- Build/$.pdx" (File.esc(app),settings//details//filename)
 endRoutine
 
 routine configure
-  if (not System.find_program("cmake"))
-    error "'cmake' must be installed."
+  if (not System.find_program("make"))
+    error "'make' must be installed."
   endIf
 
   if (not File.exists("Settings.json"))

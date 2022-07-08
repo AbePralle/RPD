@@ -41,7 +41,7 @@ nativeHeader @|#include "pd_api.h"
 nativeCode   @|PlaydateAPI* Rogue_playdate = 0;
 
 routine render( pd:Int64 ) [essential]
-  native @|Rogue_playdate = (PlaydateAPI*)$pd;
+  native @|Rogue_playdate = (PlaydateAPI*)(intptr_t)$pd;
   Playdate.render
 endRoutine
 
