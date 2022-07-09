@@ -4,7 +4,7 @@ augment Rogue::Global
   METHODS
     method configure_standard_output
       standard_output = Playdate::Log
-      standard_error  = Playdate::Log
+      error  = Playdate::Log
 endAugment
 
 class Log : BufferedPrintWriter [singleton]
